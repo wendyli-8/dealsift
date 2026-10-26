@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>DealSift – Weekly grocery deals</title>
+<meta name="description" content="DealSift compares weekly grocery deals and everyday prices at Kroger, Publix, Aldi and Trader Joe’s.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%9B%92%3C/text%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef3f1;--surface:#fff;--ink:#12261f;--muted:#5d6f68;--line:#d7e1dd;--best:#0b7a4b;--bestbg:#dff3e8;--chip:#e2ebe7;--accent:#12261f;--accentink:#fff;--sale:#c2410c;--salebg:#ffe9dc;
+--k:#2457c5;--p:#2f8f3a;--a:#d9601a;--t:#c4262e;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1815;--surface:#162420;--ink:#e6f0ec;--muted:#93a8a0;--line:#26372f;--best:#5fd39a;--bestbg:#17382a;--chip:#1f302a;--accent:#e6f0ec;--accentink:#0e1815;--sale:#ff9d6b;--salebg:#3b2316;--k:#6f9bff;--p:#5fbf6a;--a:#f29a5c;--t:#ef6a70;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0e1815;--surface:#162420;--ink:#e6f0ec;--muted:#93a8a0;--line:#26372f;--best:#5fd39a;--bestbg:#17382a;--chip:#1f302a;--accent:#e6f0ec;--accentink:#0e1815;--sale:#ff9d6b;--salebg:#3b2316;--k:#6f9bff;--p:#5fbf6a;--a:#f29a5c;--t:#ef6a70;color-scheme:dark}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 Figtree,system-ui,sans-serif}
+.wrap{max-width:980px;margin:0 auto;padding:28px 18px 64px}
+h1{font:800 clamp(2rem,6vw,3.2rem)/1 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.03em;margin:0 0 8px}
+.sub{color:var(--muted);margin:0 0 18px;max-width:56ch}
+.note{background:var(--chip);border-radius:10px;padding:10px 14px;font-size:.9rem;color:var(--muted);margin-bottom:20px}
+.note b{color:var(--ink)}
+.search{width:100%;font:inherit;padding:14px 16px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink)}
+.search:focus-visible,button:focus-visible,select:focus-visible{outline:3px solid var(--best);outline-offset:2px}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;align-items:center}
+.cats{overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px}
+button.chip,select{font:500 .92rem Figtree,sans-serif;padding:8px 14px;border-radius:999px;border:1.5px solid transparent;background:var(--chip);color:var(--ink);cursor:pointer;white-space:nowrap}
+button.chip[aria-pressed="true"]{background:var(--accent);color:var(--accentink)}
+.seg{display:inline-flex;background:var(--chip);border-radius:999px;padding:3px}
+.seg button{border:0;background:transparent;color:var(--ink);font:600 .92rem Figtree,sans-serif;padding:8px 16px;border-radius:999px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accentink)}
+button.store{border-color:var(--line);background:var(--surface)}
+button.store[aria-pressed="true"]{border-color:currentColor;font-weight:600}
+button.store::before{content:"";display:inline-block;width:9px;height:9px;border-radius:50%;background:currentColor;margin-right:7px;opacity:.35}
+button.store[aria-pressed="true"]::before{opacity:1}
+select{border-radius:10px;margin-left:auto}
+.picks{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:22px 0 8px}
+.pick{background:var(--surface);border-radius:14px;padding:14px;border-top:5px solid currentColor}
+.pick .pct{font:800 2rem/1 'Bricolage Grotesque',sans-serif;color:var(--sale)}
+.pick .pn{font-weight:600;color:var(--ink);margin-top:6px}
+.pick .pd{font-size:.85rem;color:var(--muted)}
+.hd{font:700 1.1rem 'Bricolage Grotesque',sans-serif;margin:20px 0 4px}
+.count{color:var(--muted);font-size:.9rem;margin:0 0 10px}
+.item{background:var(--surface);border-radius:14px;padding:14px 16px;margin-bottom:10px;display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,2.7fr);gap:14px;align-items:center}
+.name{font-weight:600}
+.size{color:var(--muted);font-size:.85rem}
+.tag{display:inline-block;margin-top:5px;font-size:.78rem;font-weight:600;color:var(--sale);background:var(--salebg);padding:2px 9px;border-radius:999px}
+.prices{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.p{border-radius:10px;padding:8px 6px;text-align:center;border:1.5px solid var(--line);min-height:74px}
+.p .sn{font-size:.72rem;font-weight:600}
+.p .v{font:700 1.15rem/1.2 'Bricolage Grotesque',sans-serif;color:var(--ink)}
+.p .was{font-size:.78rem;color:var(--muted);text-decoration:line-through}
+.p .off{font-size:.72rem;font-weight:700;color:var(--sale)}
+.p.best{background:var(--bestbg);border-color:var(--best)}
+.p.best .v{color:var(--best)}
+.p.na .v{color:var(--muted);font-weight:500;font-size:.9rem}
+.p.dim{opacity:.3}
+.empty{text-align:center;padding:48px 16px;color:var(--muted)}
+.empty button{margin-top:12px}
+.k{color:var(--k)}.pb{color:var(--p)}.a{color:var(--a)}.tj{color:var(--t)}
+.loc{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:6px}
+.loc label{display:flex;align-items:center;gap:8px;font-weight:500}
+#zip{font:inherit;width:110px;padding:10px 14px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink)}
+#zip:focus-visible{outline:3px solid var(--best);outline-offset:2px}
+.loc select{margin-left:0;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);padding:10px 14px}
+.locmsg{color:var(--muted);font-size:.88rem;margin:0 0 14px;min-height:1.3em}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.theme{background:var(--chip);border:0;border-radius:999px;width:40px;height:40px;cursor:pointer;color:var(--ink);font-size:1.1rem}
+@media (max-width:680px){.item{grid-template-columns:1fr}.picks{grid-template-columns:1fr}select{margin-left:0}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div>
+      <h1>DealSift</h1>
+      <p class="sub">This week’s biggest grocery discounts at Kroger, Publix and Aldi, with Trader Joe’s everyday prices for comparison.</p>
+    </div>
+    <button class="theme" id="theme" aria-label="Toggle dark mode">◐</button>
+  </div>
+  
+  <div class="loc"><label for="zip">ZIP code <input id="zip" inputmode="numeric" maxlength="5" placeholder="30601" autocomplete="postal-code"></label><label for="radius">Within <select id="radius"><option value="5">5 miles</option><option value="10">10 miles</option><option value="20" selected>20 miles</option><option value="30">30 miles</option><option value="50">50 miles</option></select></label></div>
+  <div class="locmsg" id="locmsg" aria-live="polite"></div>
+  <div id="nearby"></div>
+  <input class="search" id="q" type="search" placeholder="Search products, like “eggs” or “pasta”" aria-label="Search products" autocomplete="off">
+  <div class="row cats" id="cats" role="group" aria-label="Categories"></div>
+  <div class="row" id="stores" role="group" aria-label="Stores to include"></div>
+  <div class="row">
+    <div class="seg" id="mode" role="group" aria-label="View"><button data-m="deals" aria-pressed="true">Deals this week</button><button data-m="all" aria-pressed="false">All tracked items</button><button data-m="cmp" aria-pressed="false">Compare stores</button></div>
+    <select id="sort" aria-label="Sort products">
+      <option value="pct">Sort: Biggest % off</option>
+      <option value="off">Sort: Biggest $ off</option>
+      <option value="low">Sort: Lowest price</option>
+      <option value="name">Sort: A to Z</option>
+    </select>
+  </div>
+
+  <div id="picks"></div>
+  <p class="count" id="count"></p>
+  <div id="list"></div>
+  <p style="color:var(--muted);font-size:.82rem;margin-top:28px;line-height:1.5">Deals come from store weekly ads (Publix, Kroger, Aldi) and everyday prices from Trader Joe’s, collected in October 2026 from store websites and GroceryChop. Prices change and can vary by store, so check before you shop. Store locations from Google Maps.</p>
+</div>
+<script>
+const STORES=[{id:0,name:"Kroger",c:"k"},{id:1,name:"Publix",c:"pb"},{id:2,name:"Aldi",c:"a"},{id:3,name:"Trader Joe’s",c:"tj"}];
+const D=[]; // example comparison items removed
+const SALE={};
+const items0=D.map(([n,s,c,p])=>({n,s,c,p,s2:[...(SALE[n]||[null,null,null]),null]}));
+// Publix weekly ad, Frozen Food / Grocery / Health & Nutrition. Line: category|name|deal|save-up-to|note. Deal: bogo, b2g1, b2g2, b2g3, p<price>, m<qty>/<total>, o<percent>, d<$ off coupon>, t:<text>; leading ~ = valid to 11/3
+const CATMAP={F:"Frozen",G:"Grocery",H:"Health & Nutrition",B:"Bakery",S:"Snacks",P:"Pantry",D:"Dairy & Eggs",M:"Meat & Seafood",R:"Produce",V:"Beverages"};
+const AD_RAW=`F|Mayfield Creamery Ice Cream|bogo|6.79
+F|Talenti Gelato|bogo|6.99
+F|Stouffer's Entrées|m3/10||Or Lean Cuisine or Vital Pursuit, 5 to 12.75-oz
+F|P.F. Chang's Home Menu Entrées|bogo|9.79
+F|Digiorno Pizza|bogo|8.29
+F|Publix Florida Pink Shrimp|p14.99||16-oz; $13.99 with digital coupon
+F|Ocean's Halo Fried Rice|bogo|5.99
+F|White Lily Biscuits|bogo|6.75
+F|Häagen-Dazs Ice Cream|bogo|2.05
+F|Wyman's Fruit|p10.99|5.50|48-oz bag
+F|Keto Pint Bar|bogo|8.75
+F|Keto Pint Ice Cream|bogo|7.19
+F|Campoverde Fruit & Veggie Blenders|p9.99|3.40|32-oz bag
+F|New York Baked Bites|bogo|7.45
+F|Bagel Bites Snacks|bogo
+F|Barber Foods Stuffed Chicken Breasts|bogo|4.99
+F|Boston Market Home Style Meals|bogo|4.19
+F|Dolly Parton's Frozen Peach Cobbler Family Size|~d2.50||32-oz
+F|Halo Top Ice Cream|bogo
+F|Hot Pockets Stuffed Sandwiches|bogo|7.99
+F|Marie Callender's Pot Pie|bogo|13.19
+F|Michelina's Entrée, Pizza Snacks or Pop'n Chicken|bogo
+F|Nathan's Famous Beef Franks|bogo|18.79
+F|Nestlé Drumstick Sundae Cones, Lil' Drums or Mini Drums|bogo
+F|Publix Shrimp|bogo|12.99
+F|Stouffer's or Yellowstone Entrées|m2/10||9 to 20-oz box
+F|Tattooed Chef Bowl|bogo|7.19
+F|Trident Seafoods Products|bogo|13.29
+F|Yasso Frozen Greek Yogurt (any 1)|~d1.50||14-oz
+G|12-Pack Pepsi Products|b2g1|11.99|12-oz can
+G|Old El Paso Taco Shells or Tortillas|bogo|4.99
+G|V8 Beverage or Juice|bogo|7.55
+G|Artesano Bread|bogo|5.09
+G|Wonder Bread|bogo|4.85
+G|Donut Shop K-Cup Coffee|bogo|16.99
+G|Hellmann's Mayonnaise|bogo|7.09
+G|California Olive Ranch Extra Virgin Olive Oil|bogo|33.99
+G|Quaker Instant Oatmeal|bogo|7.19
+G|Thomas' English Muffins|bogo|6.99
+G|Utz or Zapp's Potato Chips or Pretzels|b2g3|14.97|7.75 to 16-oz
+G|Pepperidge Farm Milano Cookies|bogo|5.89
+G|Gatorade Thirst Quencher|b2g1|11.49|8-pk 20-oz
+G|Snyder's of Hanover Pretzels|bogo|5.19
+G|12-Pack Coca-Cola Products|b2g1|11.99|12-oz can
+G|Lacroix Sparkling Water|b2g1|6.79|12-pk 12-oz
+G|Planters Nuts|bogo|25.99
+G|Publix Spring Water|m3/10|1.97|24-pk 16.9-oz
+G|Wiley Wallaby Licorice|bogo|4.79
+G|Publix Snack Crackers|m2/7|1.38|13.7-oz box
+G|Kellogg's Frosted Flakes Cereal Cups|~m10/10|6.70|2.1-oz cup; or Froot Loops, Corn Pops, Apple Jacks
+G|Frank's Redhot Sauce|bogo|4.99
+G|McCormick Seasoning Mix|bogo|3.99
+G|Snickers Fun Size Candy|m2/10|3.98|Or Twix Caramel or Milky Way (select stores)
+G|Mars Chocolate Mix|p10.99|7.50|30-oz bag (select stores)
+G|Bush's Best Chili Beans|bogo|1.95
+G|Ferrara Halloween Candy|p14.99|5.50|27 to 36.1-oz bag (select stores)
+G|Reese's Peanut Butter Cups|bogo|7.69
+G|Smarties Original Candy Rolls|bogo|4.99
+G|Sweet Baby Ray's Barbecue Sauce|bogo|2.69
+G|Chex Mix Snack Mix|~bogo|3.49
+G|Glacéau Smartwater|bogo|2.99
+G|Hunt's Tomato Ketchup|bogo|3.09
+G|Bibigo Organic Seaweed Snack|bogo|4.99|New
+G|6-Pack Pepsi Products|bogo|9.79
+G|Green Giant Vegetables|bogo|7.75
+G|Idahoan Family Size Mashed Potatoes|bogo|2.99
+G|Crunch, Butterfinger and Baby Ruth Candy|p13.49|5.00|Party pack 30-oz (select stores)
+G|Lindt Excellence Dark Chocolate 70%|b2g1|5.65|3.5-oz bar
+G|Hidden Valley Ranch Dressing|bogo|4.99
+G|Dum Dums Pops|bogo|14.99
+G|Ball Park Hot Dog Buns|~bogo|4.45
+G|Cholula Hot Sauce|bogo|4.15
+G|Mars Party Size Mixed Candies|p9.99|1.70|19.2-oz bag (select stores)
+G|Peter Pan Peanut Butter|~bogo|6.49
+G|Ragú Kettle Cooked Pasta Sauce|bogo|4.29|New
+G|Rao's Homemade Sauce|~p6.99|3.30|32-oz jar
+G|Botticelli Pasta Sauce|~bogo|8.25
+G|Albanese Gummy Bears|bogo|10.49
+G|Botticelli Premium Organic Ground Coffee|bogo|15.99|New
+G|Campbell's Condensed Sauce|bogo|2.99|New
+G|Frito Lay Party Size Snacks|m2/9|5.58|8.25 to 17-oz bag
+G|6-Pack 7UP Products|~bogo|9.29
+G|Orville Redenbacher's Gourmet Popping Corn|bogo|5.99
+G|Sour Patch Kids Candy|bogo|4.19
+G|6-Pack Coca-Cola Soft Drink Products|b2g2|18.58|16.9-oz bottle
+G|Kraft Caramels|bogo|3.79
+G|Contadina Roma Tomatoes|bogo|3.29
+G|Lay's Stax Potato Crisps|b2g1|2.49|5.5 or 5.75-oz
+G|4-Pack Poppi Prebiotic Soda|~b2g1|9.29|12-oz can
+G|Publix Black Beans|p2.99||32-oz bag
+G|Coca-Cola Products|b2g1|2.59|1.25-L bottle
+G|Cheetos Snacks|bogo|5.49
+G|Entenmann's Little Bites Snacks|bogo|5.69
+G|Campbell's Spaghettios|bogo|1.69
+G|Bai Antioxidant Beverage|bogo|2.59
+G|Pop-Tarts Toaster Pastries|m2/5|3.98|8-ct box
+G|10-Pack Pepsi Products|b2g1|9.79|7.5-oz can
+G|Frito Lay Snack Mix Variety Pack|p9.99|3.70|15 to 18-ct
+G|Pure Leaf Tea|bogo|2.69
+G|Bertolli Olive Oil|bogo|15.49
+G|Wise Potato Chips|bogo|4.79
+G|Dole Fruit Cups|m2/6|2.56|Or Wiggles gels or parfait, 4-pk
+G|Pepsi Products|bogo|2.59
+G|Electrolit Electrolyte Beverage|bogo|3.45
+G|Chick-Fil-A Waffle Potato Chips|b2g1|5.65|7-oz bag
+G|C2O Coconut Water|bogo|5.65
+G|Kool-Aid Jammers Juice Drink|bogo|4.15
+G|Vita Coco Coconut Water|b2g1|4.15|Farmers Organic 500-mL
+G|Clamato Tomato Cocktail|bogo|3.29
+G|Mission Carb Balance Flour Tortillas|bogo|5.29
+G|Mid's Pizza Sauce|bogo|3.09
+G|La Banderita Carb Counter Flour Tortillas|bogo|6.49
+G|Dave's Killer Bread Organic Bars|bogo|5.99
+G|International Delight Creamer|bogo|4.69
+G|Goodles Pasta and Cheese|m2/4|1.58|2.1 or 2.2-oz cup
+G|Mid's Sauce|bogo|6.19
+G|Publix Malta Malt Beverage|m2/7|2.70|6-pk 7-oz
+G|Sensible Portions Garden Veggie Straws|bogo|4.65
+G|Bertolli Vinegar|bogo|6.19
+G|Bumble Bee Snack on the Run Tuna Salad|p4.79|1.40|3-pk 3.5-oz
+G|Saffron Road Chickpeas|bogo|5.15
+G|Liquid Death Flavored Sparkling Water|bogo|8.25
+G|Bertolli Olives|bogo|8.19
+G|Dave's Killer Bread Organic Snack Bites|bogo|6.69
+G|La Colombe Coffee|bogo|3.39
+G|Kii Naturals Artisan Crisps|bogo|6.19
+G|Bonafide Provisions Broth|bogo|4.65
+G|Eight O'Clock K-Cup Coffee|bogo|27.99
+G|Gogo Squeez Active Fruit Blend|p10.99|1.70|10-pk 3.9-oz
+G|Don Francisco's Coffee|p6.99|3.30|10-oz can
+G|Mazola Oil|p4.49|1.88|40-oz
+G|Liquid Death Mountain Water|bogo|7.19
+G|Olibites Pitted Green Olives|bogo|2.09
+G|Emerald Whole Cashews|p8.29|3.40|14-oz; or Kettle Glazed Pecans
+G|Chicken of the Sea Albacore Pure Tuna|m2/9|5.38|4-pk 4-oz can
+G|Eight O'Clock Ground Coffee|bogo|22.79
+G|Sweet Loren's Breakfast Biscuits|bogo|5.99
+G|Starbucks K-Cup Coffee|bogo|40.49
+G|Borden Grated Cheese|bogo|4.69
+G|Batey Natural Turbinado Sugar|p9.99|1.30|5-lb bag
+G|Good 2 Grow Juice|bogo|4.55
+G|Truff Sauce|bogo|8.99
+G|Ragin' Cajun Sweet Jalapeño Relish|bogo|7.19
+G|Vitamalt Non-Alcoholic Malt Beverage|p6.29|3.00|6-pk 11.2-oz
+G|Bare Bones Instant Bone Broth|bogo|6.99
+G|Excelsior Sardines|m4/7|2.16|3.75-oz can
+G|Fox Bros. Bar-B-Q Sauce|bogo|8.19
+G|Gatorade Electrolyte Beverage|b2g1|8.49|Low sugar 6-pk 20-oz
+G|Las Palmas Enchilada Sauce|bogo|4.29
+G|Annie's Macaroni & Cheese|bogo|9.15
+G|Bear Fruit Rolls|bogo
+G|Bush's Best Sidekicks Black or Pinto Beans|bogo
+G|Campbell's Soup|bogo|2.29
+G|Campbell's Chunky Soup (buy 2 get 1 free)|~b2g1||15.25 to 19-oz; with manufacturer digital coupon
+G|Cape Cod, Snyder's or Kettle Brand Variety Pack|~p10.99||20-ct
+G|Carapelli Olive Oil|~p9.99||16.9-oz
+G|Celsius Energy Drink|b2g2||12-oz can
+G|Chick-fil-A Waffle Chips|b2g1||7-oz bag
+G|Chick-fil-A Sauce 24-oz or Buffalo Wild Wings Sauce 20-oz|~p4.99
+G|Coca-Cola Products|b2g1||1.25-L bottle
+G|8-Pack Coca-Cola Soft Drink Products|b2g1||12-oz bottle
+G|Crush, Schweppes, Starry, Mug or Brisk (any 2)|~d1.50||12-pk cans
+G|Crystal Light Drink Mix|bogo|4.69
+G|Doritos Tortilla Chips|b2g1||6 to 10.75-oz (excl. Baked, Simply, Party Size)
+G|Duke's Mayonnaise|~p7.99||48-oz
+G|Duncan Hines Brownie Mix|bogo|6.49
+G|Dunkin' Ground Coffee|bogo|11.99
+G|Fiji Water|bogo
+G|Gatorade Thirst Quencher|b2g1||28-oz bottle
+G|General Mills Cheerios Cereal|bogo
+G|Ghirardelli Melting Wafers|~p6.59||10-oz
+G|Gogo Squeez On The Go Products|bogo
+G|Griff's Toffee|~p5.99||4.5-oz
+G|Hawaiian Punch Fruit Flavored Juice Drink|bogo|5.19
+G|Jackson's Chips|bogo|4.49
+G|Kikkoman Teriyaki|~t:$1.00 off||10 to 21.5-oz
+G|M&M's Chocolate Candies|p7.99||Family size 15 to 18.08-oz
+G|Mauna Loa Macadamias|p6.99|2.00|Sea salt, 5-oz box
+G|Monster Energy|~p21.99||12-pk
+G|Nabisco Nilla Wafers or Newtons|m2/8||10 or 11-oz
+G|Nabisco Party Size Cookies or Crackers|m2/11||17 to 27.4-oz party size
+G|Nestlé Toll House Morsels|m2/10||9 to 12-oz bag
+G|Simpli Regenerative Organic Beans|~p4.99||12-oz
+G|Xochitl Tortilla Chips|~m2/9||7 to 10-oz
+G|Wickles Pickles, Relish, Okra or Sandwich Spread|m3/10||16 or 24-oz jar
+G|Fishwife Albacore Tuna|~p5.99||3.2-oz
+G|Pace Salsa, Dip, Sauce or Queso Party Bowls|bogo
+G|Pearl Milling Company Syrup|bogo
+G|Pepperidge Farm Swirl Bread or Bagels|bogo
+G|Pepsi Branded 20-oz (buy 1 get 1 free)|~bogo||With manufacturer digital coupon
+G|Plochman's Squeeze Mustard|bogo
+G|Polaner All Fruit Spreadable Fruit Spread|bogo
+G|Publix French Fried Onions|p2.99||6-oz bag
+G|Publix Candy (Starlight Mints, Gummi Bears, Sour Worms)|o25||10-oz bag
+G|Publix Bacon Bits|m2/5||3-oz pouch
+G|Pure Leaf Tea|b2g1||6-pk 16.9-oz
+G|Pure Life Purified Water or Deer Park Spring Water|bogo
+G|Quaker Chewy Granola Bars|bogo|10.99
+G|Rao's Family Size Entrées|bogo
+G|Ruffles Potato Chips|bogo|5.49
+G|Sensible Portions Garden Veggie Straws or Chips|bogo
+G|Somos Rice|bogo|4.15
+G|Sour Patch Kids Gummies|bogo
+G|Tate's Bake Shop Cookies|m2/10||5.5 to 8-oz bag
+G|Utz Snacks Container|~p6.99||8 to 28-oz
+G|Welch's Sparkling Juice Cocktail|bogo|4.49
+G|Welch's Jelly, Jam or Spread|bogo
+G|12-Pack Zevia Zero Sugar Soda|bogo|12.39
+H|Zarbee's or Tylenol Cold Medicine|bogo|13.21
+H|Dave's Killer Bread Organic Protein Bar|bogo|9.09
+H|Tucks Medicated Pads|bogo|8.25
+H|Premier Protein Protein Soda|m2/5|1.78|12-oz can
+H|1st Phorm Level-1 Protein Bar|bogo|11.99
+H|Advil, Advil PM, Excedrin or Voltaren (any 1)|~d5.00||Advil PM 120-ct, Excedrin 200-ct, Voltaren 100-g
+H|Benadryl Product (any 1)|~d2.00||Excludes trial/travel size
+H|BioFreeze Items|~bogo
+H|Centrum (any 1)|~d3.00||60-ct or larger
+H|Excedrin Rapid Relief|~t:$4.00 off||80-ct, new
+H|Force Factor|~t:Buy 2 get $8.00 off||60 to 120-ct or 7.4-oz
+H|Gatorade Recover Protein Bar|~m2/4||2.8-oz
+H|Lärabar Real Fruit & Nut Bar|~m10/10||1.6-oz
+H|Motrin or Bengay|bogo
+H|Nature's Truth Supplements|bogo|45.99
+H|One A Day Men's or Women's Vitamins|~p15.99||Multi 200-ct, Gummy 170-ct or 50+ Gummy 110-ct
+H|Opti-Free Pure Moist, Systane Complete PF or Pataday|~p17.99||5-mL or as listed
+H|Publix Allergy Relief Medicine|bogo|14.39
+H|Robitussin, Theraflu or Emergen-C|~t:Buy 2 get $6.00 off
+H|Adult Tylenol PM (any 1)|~d2.00||Excludes trial/travel size
+H|Tylenol, Pepcid, Lactaid, Imodium, Zyrtec or Allergy Shield|~t:Buy 2 get $6.00 off
+H|Vicks VapoCool Drops|~m2/9.99||45-ct; 2 for $8.49 with digital coupon
+H|Vicks VapoFreeze Pain Relief|~p13.99||3-oz; $10.99 with digital coupon
+H|Zarbee's Product (any 1)|~d3.00
+H|Lily of the Desert Supplement|bogo|18.99
+B|Entenmann's Little Bites Blueberry Mini Muffins|k2.84|5.69|Calhoun store
+B|Entenmann's Little Bites Pumpkin Mini Muffins|k2.84|5.69|Calhoun store
+B|Entenmann's Little Bites Party Cake Mini Muffins|k2.84|5.69|Calhoun store
+B|Thomas' Protein English Muffins|k3.50|5.99|Calhoun store
+S|CHIPS AHOY! Chewy Fudgy Chocolate Chip Cookies|k3.00|4.29|Dalton store
+S|CHIPS AHOY! Chewy Cookies 'n' Cream Chocolate Chip Cookies|k3.00|4.29|Dalton store
+S|CHIPS AHOY! Chunky Fudgy Chocolate Chip Cookies|k3.00|4.29|Dalton store
+S|CHIPS AHOY! Original Chocolate Chip Cookies|k3.00|4.29|Dalton store
+S|David High Protein Bar, Blueberry Pie (28g protein)|k10.49|12.99|Gainesville store
+S|David High Protein Bar, Chocolate Chip Cookie Dough|k10.49|12.99|Gainesville store
+S|David High Protein Bar, Peanut Butter Chocolate Chunk|k10.49|12.99|Gainesville store
+P|Hershey's Milk Chocolate Baking Chips|k3.99|5.49|Dalton store
+P|Ghirardelli Premium Baking 72% Cacao Dark Chocolate Chips|k7.99|10.29|Dalton store
+P|Lily's Dark Chocolate Style No Sugar Added Baking Chips|k6.99|8.99|Dalton store
+P|Lily's Semi-Sweet Chocolate Style No Sugar Added Baking Chips|k6.99|8.99|Dalton store
+S|CHIPS AHOY! Chocolate Chip Cookies Multipack|k5.99|7.49|Dalton store
+B|Entenmann's Little Bites Chocolate Chip Halloween Mini Muffins|k9.99|11.99|Calhoun store
+B|Thomas' Blueberry English Muffins|k3.79|4.49|Calhoun store
+B|Thomas' Whole Wheat English Muffins|k3.79|4.49|Calhoun store
+S|CHIPS AHOY! Chunky Fudgy Chocolate Chip Cookies Party Size|k5.99|6.99|Dalton store
+S|Ghirardelli Classic Chocolate Chip Crispy Cookies|k5.99|6.99|Dalton store
+S|CHIPS AHOY! Chewy Fudgy Chocolate Chip Cookies Party Size|k5.99|6.99|Dalton store
+S|CHIPS AHOY! Original Chocolate Chip Cookies Party Size|k5.99|6.99|Dalton store
+S|CHIPS AHOY! Chunky Fudgy Chocolate Chip Cookies Family Size|k4.99|5.79|Dalton store
+S|CHIPS AHOY! Candy Blasts Fudgy Chocolate Chip Cookies Family Size|k4.99|5.79|Dalton store
+P|Nestle Toll House Dark Chocolate Morsels|k4.99|5.79|Dalton store
+P|Nestle Toll House Mini Milk Chocolate Chip Morsels|k4.99|5.79|Dalton store
+P|Nestle Toll House Milk Chocolate Morsels|k4.99|5.79|Dalton store
+P|Nestle Toll House Semi-Sweet Chocolate Mini Morsels|k4.99|5.79|Dalton store
+S|CHIPS AHOY! Original Chocolate Chip Cookies Family Size|k4.99|5.79|Dalton store
+S|CHIPS AHOY! Chewy Fudgy Chocolate Chip Cookies Family Size|k4.99|5.79|Dalton store
+S|CHIPS AHOY! Hershey's Milk Chocolate Chip Cookies Family Size|k4.99|5.79|Dalton store
+S|CHIPS AHOY! Chewy Hershey's Fudge Filled Soft Cookies|k4.99|5.79|Dalton store
+S|CHIPS AHOY! Original Crunchy Gluten Free Chocolate Chip Cookies|k4.99|5.79|Dalton store
+S|CHIPS AHOY! Crunchy Chocolate Caramel Chocolate Chip Cookies|k4.99|5.79|Dalton store
+S|CHIPS AHOY! Chewy Gluten Free Fudgy Chocolate Chip Cookies|k4.99|5.79|Dalton store
+P|Ghirardelli Premium Baking Semi-Sweet Chocolate Chips|k6.99|7.99|Dalton store
+P|Ghirardelli Premium Baking Milk Chocolate Chips|k6.99|7.99|Dalton store
+P|Ghirardelli Premium Baking 60% Cacao Bittersweet Chocolate Chips|k6.99|7.99|Dalton store
+D|Califia Farms Organic Vanilla Almond Milk Coffee Creamer|k6.09|6.99|Calhoun store
+F|Yellowstone Dutton Family BBQ Meatloaf and Mash|q5.55|7.53|Gainesville store
+P|McCormick Ground Cumin|q3.31|3.97|Gainesville store
+M|Publix Brisket & Sirloin Craft Burger|q15.49|16.59|Buford store
+M|Schweid & Sons Signature Blend Chuck Brisket Smashburgers|q14.39|15.49|Buford store
+P|McCormick Gourmet Organic Ground Cumin|u:$5.37 · Spend $10, save $2||Gainesville store
+P|Lawry's Classic Coarse Ground Garlic Salt|u:$7.19 · Spend $25, save $5||Gainesville store
+P|Lawry's Garlic Powder Coarse Ground With Parsley|u:$12.29 · Spend $25, save $5||Gainesville store
+P|Lawry's Coarse Ground With Parsley Garlic Salt|u:$5.53 · Spend $25, save $5||Gainesville store
+S|Archer Original Beef|u:$18.79 · Spend $25, save $5||Gainesville store
+H|TUMS Chewy Bites Chewable Antacid Tablets|u:$8.75 · Spend $25, save $5||Jefferson store
+H|TUMS Chewy Bites Chewable Antacid Tablets|u:$13.59 · Spend $25, save $5||Jefferson store
+H|TUMS Chewy Bites Chewable Antacid Tablets|u:$7.19 · Spend $25, save $5||Jefferson store
+H|TUMS Chewy Bites Ultra Strength Antacid Chewable Tablets|u:$8.75 · Spend $25, save $5||Jefferson store
+H|TUMS Ultra Strength Chewable Antacid Tablets|u:$13.59 · Spend $25, save $5||Jefferson store
+H|TUMS Ultra Strength Chewable Antacid Tablets|u:$7.53 · Spend $25, save $5||Jefferson store
+H|TUMS Chewable Antacid Tablets|u:$12.19 · Spend $25, save $5||Jefferson store
+H|TUMS Chewable Antacid Tablets|u:$13.59 · Spend $25, save $5||Jefferson store, 2 sizes
+H|TUMS Chewable Antacid Tablets|u:$7.53 · Spend $25, save $5||Jefferson store, 6 sizes
+H|TUMS Chewable Antacid Tablets|u:$3.53 · Spend $25, save $5||Jefferson store
+H|TUMS Chewable Extra Strength Antacid Tablets|u:$13.69 · Spend $25, save $5||Jefferson store
+H|TUMS Chewable Extra Strength Antacid Tablets|u:$7.53 · Spend $25, save $5||Jefferson store
+H|TUMS Chewable Extra Strength Antacid Tablets|u:$2.87 · Spend $25, save $5||Jefferson store
+H|TUMS Ultra Strength Antacid Soft Chews|u:$7.53 · Spend $25, save $5||Jefferson store
+H|Pepcid Complete Acid Reducer + Antacid Chews, Berry, 25 ct|u:$14.59 · Buy 2, get $6 off||Jefferson store
+H|Pepcid Complete Acid Reducer + Antacid Chews, Tropical Fruit, 25 ct|u:$14.99 · Buy 2, get $6 off||Jefferson store
+H|Pepcid Complete Acid Reducer + Antacid Chews, Berry, 50 ct|u:$26.89 · Spend $40, save $10||Jefferson store
+B|Entenmann's Little Bites Chocolatey Chip Mini Muffins Value Pack|k7.69|8.49|Calhoun store, 10 ct
+B|Entenmann's Little Bites Fudge Mini Brownies Value Pack|k7.69|8.49|Calhoun store, 10 ct
+B|Entenmann's Little Bites Blueberry Mini Muffins Value Pack|k7.69|8.49|Calhoun store, 10 ct
+B|Entenmann's Little Bites Party Cake Mini Muffins Value Pack|k7.69|8.49|Calhoun store, 10 ct
+P|Guy Fieri Flavortown Bourbon Brown Sugar BBQ Rub|k5.78|6.29|Sugar Hill store, 4.5-oz
+B|Dave's Killer Bread Killer Classic Organic English Muffins|k5.99|6.49|Calhoun store, 6 ct
+G|Taste of the South Smokehouse Beef Brisket Dip|k6.49|6.99|Sugar Hill store
+P|Krusteaz Chocolate Chunk Muffin Mix|k3.39|3.49|Calhoun store, 18.25-oz
+P|Krusteaz Wild Blueberry Muffin Mix|k3.39|3.49|Calhoun store, 17.1-oz
+R|California Autumncrisp Grapes|y:$4.99 · per 2-lb pkg||Price drop
+S|Caramel Apples|y:$2.99 · per 3-pack||Price drop
+R|Blackberries|y:$1.69 · per 6-oz pkg||Price drop
+R|Michigan Honeycrisp Apple Tote|y:$1.39 · per lb||Price drop
+R|Bite-Size Yellow Potatoes|y:$2.49 · per 24-oz bag||Price drop
+R|Gourmet Medley Tomatoes|y:$2.79 · per 12-oz pkg||Price drop
+R|Organic Avocados|y:$3.49 · per 4-pack||Price drop
+R|Organic Baby Peeled Carrots|y:$1.39 · per 16-oz bag||Price drop
+M|Tyson Fresh Chicken Breasts|y:$1.79 · per lb||While quantities last
+M|Smithfield Fresh St. Louis Pork Ribs|y:$2.49 · per lb||While quantities last
+M|Fresh Guajillo Roast|y:$6.49 · per lb||While quantities last
+F|Kirkwood Family Size Chicken Nuggets|y:$6.89 · 48-oz
+F|Kirkwood Breaded Chicken Patties|y:$4.99 · 23.8-oz
+B|Specially Selected Brioche Burger Buns|y:$3.99 · 10.58-oz
+F|Mama Cozzi's Pizza Kitchen Cheesy Breadsticks|y:$4.69 · 18.75-oz
+F|Mama Cozzi's Pizza Kitchen Deli Pizza|y:$5.99 to $7.99 each||39.1 to 53-oz, assorted
+F|Season's Choice Whole Onion Rings|y:$3.29 · 16-oz
+P|Burman's Dipping Sauce|y:$2.89 · 16-oz
+P|Sweet Baby Ray's BBQ Sauce|y:$3.24 · 28-oz
+F|Bremer Toasted Ravioli|y:$3.59 · 16-oz
+F|Casa Mamita Taquitos|y:$4.89 · 20-oz
+S|Savoritz Family Size Cheese Crackers|y:$3.79 · 21-oz
+S|Clancy's Pretzels|y:$2.19 · 16-oz
+S|Clancy's Puffed Corn|y:$1.69 · 5-oz
+S|Simply Nature Tortilla Chips|y:$2.49 · 8.25-oz
+P|Simply Nature Organic Assorted Salsa|y:$2.59 · 16-oz
+S|Benton's Mini Waffle Cones|y:$3.79 · 4.23-oz
+S|Millville Crispy Rice Treats|y:$2.49 · 6.2-oz
+S|Clancy's Cinnamon Bun or Salted Caramel Pretzels|y:$2.99 · 8-oz||ALDI Find
+V|PurAqua 12-Quart Drink Mix|y:$2.29 each
+V|PurAqua Flavored Water 24-Pack|y:$7.45 · 16-oz bottles
+V|Capri Sun Juice Pouches|y:$3.12 · 10 pouches
+S|Halloween Candy|y:starting at $2.59 each
+M|Fresh Black Angus Top Round Roast|z:$7.99 · per lb||Seasonal
+M|Fresh Sirloin Tip Roast|z:$7.49 · per lb||Seasonal
+M|Fresh Norwegian Salmon Portion|z:$11.29 · per lb||Fresh, never frozen
+M|Fresh Seasoned Chuck Roast|z:$6.99 · per lb||Seasonal
+M|Fresh Black Angus Chuck Roast|z:$6.99 · per lb
+M|Fresh Black Angus Bottom Round Roast|z:$6.49 · per lb||Seasonal
+M|Tyson Fresh Beef Pot Roast Kit|z:$12.49 · 2.75 lb||Seasonal
+M|Fresh Grass-Fed Stew Meat|z:$7.49 · per lb||Seasonal
+M|Fresh Birria Seasoned Beef|z:$6.49 · per lb
+M|Simply Nature Organic 85/15 Grass-Fed Ground Beef|z:$5.99 · 1 lb||ALDI Fan Favorite
+M|Fresh Ground Lamb|z:$7.99 · 1 lb||Seasonal
+M|Fresh Lamb Loin Chops|z:$10.99 · per lb||Seasonal
+M|Fresh Pork Boneless Country Style Ribs|z:$3.89 · per lb
+M|Fresh Boneless Center Cut Pork Chops|z:$3.99 · per lb
+M|Fresh Boneless Half Pork Butt Roast|z:$2.99 · per lb
+M|Fresh Half Pork Loin|z:$2.09 · per lb
+M|Sugardale Hickory Smoked Ham Steak|z:$3.49 · per lb
+M|Pork Italian Style Meatballs|z:$3.99 · 16-oz
+M|Fresh Family Pack Chicken Breasts|a1.99|2.19|Price drop, per lb
+M|Fresh Family Pack Boneless Skinless Chicken Thighs|z:$2.99 · per lb
+M|Fresh Family Pack Chicken Drumsticks|z:$1.09 · per lb
+M|Simply Nature Fresh Organic Whole Chicken|z:$2.79 · per lb
+M|Kirkwood Whole Duck|z:$3.29 · per lb||Frozen
+M|Kirkwood Fresh Turkey Tenderloins|z:$7.99 · 24-oz||Seasonal
+M|Lightly Smoked Salmon|z:$11.49 · per lb||Seasonal
+M|Fresh Skinless Atlantic Salmon|z:$9.99 · per lb||Seasonal, fresh never frozen
+M|Specially Selected Black Tiger Shrimp|z:$11.99 · 16-oz||Seasonal, frozen
+M|Fremont Fish Market Bay Scallops|z:$5.99 · 16-oz||Seasonal, frozen
+R|Butternut Squash|w:$2.49/each
+R|Baby Pak Choi|w:$2.49/6 oz
+R|Snowball Pumpkins|w:$2.99/each
+R|Zucchini Squash|w:$2.49/24 oz
+R|Organic Green Onions|w:$1.49/6 oz
+R|Garlic Parsley Potato Kit|w:$3.69/16 oz
+R|Melon Trio|w:$4.49/16 oz
+R|Two Potato Hash|w:$4.99/14 oz
+R|Ice Cube Baby Iceberg Lettuce|w:$2.99/each
+R|Organic Peeled Ginger|w:$3.49/4 oz
+R|Gold Potatoes|w:$4.99/5 lb
+R|Organic Crimini Mushrooms|w:$2.69/8 oz
+R|Organic Sweet Potatoes|w:$4.99/3 lb
+R|Fresh Fennel|w:$2.49/20 oz
+R|Trimmed Leeks|w:$2.49/6 oz
+R|Steamed & Peeled Baby Beets|w:$2.29/8 oz
+R|Organic Red & Green Leaf Salad Mix|w:$2.49/5 oz
+R|Apple Cabbage Slaw Salad Kit|w:$4.49/13.25 oz
+D|Chino Valley Ranchers The Jammy Egg|w:$3.99/9.3 oz
+D|Cage Free Hard Cooked Eggs|w:$3.49/9.3 oz
+D|Kramer Farms Cage Free Hard-Boiled Eggs|w:$3.49/9.3 oz
+D|Organic Pasture Raised Large Brown Eggs|w:$6.99/dozen
+D|Pasture Raised Large Brown Eggs|w:$5.99/dozen
+D|Caramel Macchiato Creamer|w:$3.99/32 fl oz
+D|Organic Pumpkin Pie Spice Creamer|w:$2.99/16 fl oz
+D|Organic Sweet Cream Creamer|w:$2.99/16 fl oz
+D|Vanilla Cold Foam Creamer|w:$4.49/15 oz
+D|Chocolate Whipped Light Cream|w:$4.49/13 oz
+D|European Style Organic Plain Yogurt|w:$4.99/32 oz
+D|Strawberry Strained Thick & Creamy Greek Yogurt|w:$5.49/32 oz
+D|Greek Lowfat Yogurt Plain|w:$2.99/16 oz
+D|Organic Lactose Free Reduced Fat Milk|w:$5.69/64 fl oz
+D|Organic Milk A2/A2|w:$5.99/64 fl oz
+D|Egg Nog|w:$3.99/32 fl oz
+D|Huntsman Cheese|w:$12.99/lb
+D|Sticky Toffee Cheddar|w:$11.99/lb
+D|Tres Leches Cheese|w:$4.99/5.29 oz
+D|Creamy Toscano Cheese Soaked in Syrah|w:$11.99/lb
+D|American Heritage Light Cream Cheese|w:$2.99/12 oz
+D|American Heritage Cream Cheese with Chives & Onions|w:$2.79/8 oz
+D|Neufchatel Cheese|w:$1.99/8 oz
+D|Grated Seasoned Parmesan Cheese|w:$10.99/lb
+D|Pink Peppercorn Fontina Cheese|w:$6.99/7 oz
+D|Ooey Gooey Cheese Blend|w:$4.99/12 oz
+D|The Sheepish Pesto|w:$6.49/5.3 oz
+D|The Sheepish Tomato|w:$5.99/6 oz
+D|Paneer Indian Style Cheese|w:$4.99/10 oz
+D|Silver Goat Chevre Goat Cheese Log|w:$4.79/8.5 oz
+D|Wild Blueberry Vanilla Chevre|w:$5.99/8 oz
+D|Seasoned Toscano Cheese Shredded Pizza|w:$4.49/8 oz
+M|IPA Beer Uncured Salami Bites|w:$4.99/5 oz
+M|Just Like Your Grandma's Stuffing Chicken Sausage|w:$4.99/12 oz
+M|Santa Maria Tri-Tip Roast|w:$13.99/lb
+M|Sliced Rotisserie Seasoned Chicken Breast|w:$4.99/7 oz
+M|Cranberry Jalapeño Chicken Meatballs|w:$4.29/12 oz
+M|Beef Brisket|w:$8.99/lb
+M|Wild Caught Cod Fillets|w:$11.99/lb
+M|Uncured Bacon Bits|w:$3.29/3 oz
+M|Seasoned and Shredded Rotisserie Chicken|w:$8.99/16 oz
+M|Pollo Asado Chicken Thighs|w:$6.99/lb
+M|Carne Asada Ranchera|w:$13.99/lb
+M|Al Pastor Diced Pork Shoulder|w:$6.49/lb
+M|Reduced Sodium Italian Dry Uncured Salami|w:$5.49/8 oz
+M|Patagonian Scallops|w:$9.99/16 oz
+M|Smoked Steelhead Trout|w:$5.49/4 oz
+M|Surimi Imitation Crabmeat|w:$3.99/12 oz
+M|Norwegian Smoked Salmon|w:$5.49/4 oz
+M|Wild Alaskan Sockeye Salmon Fillets|w:$16.99/lb
+F|Hane Style Beef Gyoza|w:$3.69/10.135 oz
+F|Chicken Flautas|w:$4.99/11.52 oz
+F|Linguine Nerano|w:$4.79/16 oz
+F|Chicken Florentine Lasagna|w:$7.49/32 oz
+F|Pasta Primavera|w:$4.49/16 oz
+F|Middle Eastern Style Kebabs|w:$6.99/12 oz
+F|Brown Rice|w:$3.99/30 oz
+F|Garlicky Pasta|w:$4.49/16 oz
+F|Mandu Korean Kimchi Potstickers|w:$3.49/16 oz
+F|Uncured Ham & Swiss Cheese Pockets|w:$4.99/6 oz
+F|Breaded Chicken Tenderloin Breasts|w:$8.99/28 oz
+F|Detroit Style Uncured Pepperoni Pizza|w:$7.99/24 oz
+F|Gözlemes|w:$4.99/12.7 oz
+F|Mini Blueberry Scones|w:$5.49/14.4 oz
+F|Grilled Chimichurri Chicken Thigh Skewers|w:$7.99/10.5 oz
+F|Pizza Parlanno|w:$5.49/18.2 oz
+F|Pizza Bianca|w:$4.99/12.2 oz
+F|Margherita Pizza|w:$4.99/15 oz
+F|BBQ Chicken Pizza|w:$5.99/13 oz
+F|Gluten Free Cheese Pizza|w:$5.99/11.6 oz
+F|Roasted Garlic & Pesto Pizza with Deep Fried Crust|w:$6.49/14.1 oz
+F|Honey Walnut Shrimp|w:$6.99/12.75 oz
+F|Swedish Princess Raspberry Cake|w:$7.99/18 oz
+F|Mini Apple Danish Pastries|w:$4.99/9.59 oz
+F|Apple Blossoms|w:$2.49/8.04 oz
+F|Passion Fruit Mini Ice Cream Bars|w:$3.99/9 fl oz
+F|Plum Torte|w:$7.99/18.77 oz
+F|Apple Pie a la Mode Ice Cream|w:$3.99/pint
+F|Basque Style Cheesecakes|w:$4.99/5.63 oz
+F|Chewy Thai Coconut Cakes|w:$3.79/4.76 oz
+F|Mango Sticky Rice|w:$4.69/7.05 oz
+F|Italian Mascarpone & Mixed Berries Gelato Style Frozen Dessert|w:$4.99/28.74 fl oz
+F|Black Sesame Mochi|w:$4.99/7.61 oz
+F|Strawberries & Cream Cloud Cake|w:$6.99/17.64 oz
+F|Italian Pistachio & Fior di Latte Gelato Style Frozen Dessert|w:$4.99/28.74 fl oz
+F|Passion Fruit Sorbet|w:$4.99/16 fl oz
+F|Raspberry, Vanilla & Blueberry Macarons|w:$5.99/5.53 oz
+F|Passion Fruit Meringue Tartelettes|w:$5.49/7.05 oz
+F|Strawberry Mochi|w:$4.99/6.8 oz
+F|Macaron Ice Cream Sandwiches|w:$4.99/9.47 fl oz
+F|Blood Orange Mochi|w:$4.99/6.8 oz
+F|Heart Shaped Macarons|w:$5.99/4.23 oz
+F|Portuguese Donuts|w:$4.99/7.76 oz
+F|Strawberry Hold the Cone! Mini Ice Cream Cones|w:$3.99/7.9 oz
+F|Coffee Panna Cotta|w:$3.49/7.04 oz
+F|Mango Cream Bars|w:$3.79/15 fl oz
+F|Organic Freezer Pops|w:$3.79/15 fl oz
+F|Raspberry Filled Donuts|w:$3.99/6 oz
+F|All Mixed Up Ice Cream|w:$3.99/pint
+F|Pineapple Coconut Bars|w:$3.79/15 fl oz
+F|Passion Fruit Guava Bars|w:$2.99/16 fl oz
+F|Italian Pistachio Gelato Style Frozen Dessert|w:$3.99/16 fl oz
+G|Sausage & Broccolini Rigatoni Pasta|w:$7.99/16 oz
+G|Pumpkin Gnocchi|w:$3.29/14 oz
+G|Chicken Burgers|w:$3.79/8 oz
+G|Plain or Garlic & Herb Pizza Dough|w:$1.69/16 oz
+G|Gluten Free Pizza Dough|w:$3.99/16 oz
+G|Stuffed Poblano Peppers|w:$6.99/15 oz
+G|Stuffed Peppers|w:$6.99/15 oz
+G|Chicken Breast Bites|w:$3.99/3.98 oz
+G|Chicken Sausage Ravioli|w:$4.49/9 oz
+G|Goat Cheese & Caramelized Onion Ravioli|w:$3.99/8.8 oz
+G|Protein Pancakes|w:$3.79/4.9 oz
+G|Chicken Lettuce Wraps|w:$5.99/7.5 oz
+G|Harvest Vegetable Hash Egg White Bites|w:$3.79/4.2 oz
+G|Korean Style Bibim-Guksu|w:$4.99/9.81 oz
+G|Meatball Calzone|w:$6.99/16 oz
+G|Beef, Bean & Cheese Burrito|w:$4.49/8 oz
+G|Creamy Hummus & Vegetable Wrap|w:$4.99/10.6 oz
+G|Creamy Corn Pudding|w:$5.99/16 oz
+G|Tater Bites with Sausage & Uncured Ham|w:$3.49/4.6 oz
+G|Tater Bites with Cheese & Chives|w:$3.49/4.6 oz
+G|Boquerones Spanish Anchovies|w:$4.99/4.23 oz
+B|A Singular Chocolate Chip Cookie|w:$1.99/3.52 oz
+B|Peanut Butter Cookies|w:$4.99/10.58 oz
+B|Cornbread Muffins|w:$5.49/14 oz
+B|Pumpkin Pie|w:$6.99/25.39 oz
+B|Teeny Tiny Pumpkin Pies|w:$5.49/8.18 oz
+B|Pumpkin Cream Cheese Croissants|w:$3.99/6 oz
+B|Chocolate Chip Brioche Style Liège Waffles|w:$4.99/11.64 oz
+B|Strawberry Brioche Style Liège Waffles|w:$4.99/11.64 oz
+B|Sliced Cracked Wheat Sourdough Bread|w:$3.69/24 oz
+B|Sliced Pumpkin Sourdough Bread|w:$4.99/17.63 oz
+B|Organic 21 Grains & Seeds Bread Thin Sliced|w:$4.49/20.4 oz
+B|Sliced Seedy Multigrain Bread|w:$3.99/17.65 oz
+B|Cinnamon Powdered Sugar Mini Donuts|w:$4.49/10 oz
+B|Pizza Crust|w:$3.99/15 oz
+B|Brioche Style Pancakes|w:$3.99/9.88 oz
+B|PB & J Filled Crepes|w:$3.99/6.78 oz
+B|Lemon Poppy Seed Muffins|w:$5.49/14 oz
+B|Chocolate Chip Muffins|w:$5.49/14 oz
+B|Earl Grey Blondie Bars|w:$3.49/5.25 oz
+B|Glazed Vanilla Bean Scones|w:$4.49/9 oz
+B|Red Velvet Cupcakes|w:$5.49/10.5 oz
+B|Sliced Double Chocolate Brioche|w:$5.49/17.6 oz
+B|Organic Jumbo Cinnamon Rolls|w:$4.99/17.5 oz
+B|Pumpkins Sugar Cookie Dough|w:$3.99/10.8 oz
+B|Super Chocolatey Chocolate Chunk Cookie Dough|w:$5.29/14.4 oz
+B|Super Chocolatey Gluten Free Chocolate Chunk Cookie Dough|w:$5.49/16 oz
+B|Pumpkin Flan|w:$3.49/7.04 oz
+B|Caramel Flan|w:$3.49/7.04 oz
+B|Rice Pudding|w:$2.99/14.1 oz
+B|Chocolate Pudding|w:$2.99/14.1 oz
+P|Spaghetti|w:$0.99/16 oz
+P|Penne Rigate|w:$0.99/16 oz
+P|Macaroni|w:$0.99/16 oz
+P|Fusilli|w:$0.99/16 oz
+P|Italian Lasagna Noodles|w:$2.49/lb
+P|Organic Lemon Torchietti Pasta|w:$2.99/16 oz
+P|Pearled Couscous|w:$1.99/8 oz
+P|Pizza Sauce|w:$1.99/14 oz
+P|Spicy Pink Salt with Crushed Red Chili Pepper|w:$1.99/7 oz
+P|Fine Grain Pink Salt|w:$1.69/17.6 oz
+P|Gold Aceto Balsamico Di Modena|w:$4.99/8.5 fl oz
+P|Balsamic Vinegar of Modena|w:$2.79/16.9 fl oz
+P|Seville Orange Marmalade Fruit Spread|w:$2.99/7.57 oz
+P|Organic Concord Grape Jelly|w:$3.49/20 oz
+P|Miso Instant Ramen Soup|w:$1.89/1.5 oz
+P|Miso Ginger Broth|w:$2.49/32 fl oz
+P|Vietnamese Pho Quick Rice Noodle Soup|w:$3.99/9.31 oz
+P|Organic Sri Lankan Curry & Rice|w:$3.99/13.23 oz
+P|Organic Flaxseed Meal|w:$3.99/16 oz
+P|Organic Chia Seeds|w:$4.99/12 oz
+P|Strawberry & Corn Flake Cake Muffin & Loaf Cake Mix|w:$4.49/17.71 oz
+P|Apple Vinaigrette Dressing|w:$3.49/12 fl oz
+P|Fiesta Guacamole|w:$3.49/10 oz
+P|Avocado's Number Guacamole|w:$4.99/16 oz
+P|Pickled Red Onions|w:$3.29/12 fl oz
+P|Pickled Jalapeño Pepper Slices|w:$1.99/12.5 fl oz
+P|Whole Green Lentils|w:$1.99/16 oz
+P|Lentils|w:$0.99/15 oz
+P|Fried Shallots|w:$2.49/5 oz
+P|Solid Light Yellowfin Tuna in Olive Oil|w:$2.49/5 oz
+P|Medium Green Ripe Pitted Olives|w:$2.49/14.35 oz
+P|Lemon Stuffed Olives|w:$2.99/12 oz
+P|Sauerkraut with Pickled Persian Cucumbers|w:$4.49/18 oz
+S|Whole Cashews Unroasted & Unsalted|w:$8.99/lb
+S|Freeze-Dried Queen Pineapple|w:$3.79/1.2 oz
+S|Organic Spicy Korean BBQ Seaweed Snack|w:$3.99/1.05 oz
+S|Patio Potato Chips|w:$2.99/6 oz
+S|Chocolatey Coated Peanut Butter Crispy Rice Bites|w:$4.49/8.15 oz
+S|Autumn Leaf Sugar Cookies|w:$3.99/8 oz
+S|Autumn Harvest Sweet & Salty Snack Mix|w:$4.99/10 oz
+S|Pumpkin Spiced Pumpkin Seeds|w:$3.99/8 oz
+S|Filled Belgian Chocolate Bites|w:$4.99/3.53 oz
+S|Nacho Cheese Flavored Rolled Corn Tortilla Chips|w:$2.99/9 oz
+S|Honey Mustard Popcorn|w:$2.99/5 oz
+S|Halloween Joe-Joe's Cookies|w:$4.49/16 oz
+S|Apple Crisp Milk Chocolate Caramels|w:$5.99/5.29 oz
+S|Triple Chip Crispy Cookies|w:$4.49/8.5 oz
+S|Sour Cherry Cotton Candy|w:$1.99/1.5 oz
+S|Milk Chocolate Bar with Almonds and Honey Nuggets|w:$2.99/6.3 oz
+S|Key Lime Pie Inspired Grahams|w:$4.99/8 oz
+S|Pumpkin Pie Spice Bark|w:$5.49/8 oz
+S|Cherry Pie Flavored Cookies|w:$4.49/9 oz
+S|Boozy Little Chocolate Truffles|w:$8.99/7.4 oz
+S|Meringue Dessert Shells|w:$2.99/2.2 oz
+S|Dark Chocolate Bark with Pistachios, Dried Jalapeños & Sea Salt|w:$5.99/8 oz
+S|Milk Chocolate Sardines with Sea Salt|w:$3.29/3.67 oz
+S|Hot Fudge Sundae in a Handful!|w:$4.29/8 oz
+S|Guava Tartelette Cookies|w:$2.99/4.76 oz
+S|Sour Confetti Chews|w:$2.29/5.29 oz
+S|Orange & Cream Flavored Cookies|w:$4.49/9 oz
+S|Sweet Onion Style Pretzel Twists|w:$3.69/12 oz
+S|Ketchup Flavored Lattice Potato Chips|w:$3.49/7 oz
+S|Gluten Free Cranberry Raisin Toasts|w:$4.99/5 oz
+S|Crispy Garlic|w:$3.29/4 oz
+S|Furikake Snack Mix|w:$3.99/7.5 oz
+S|Hot Honey Popcorn|w:$2.99/7 oz
+S|Popcorn in a Pickle|w:$2.29/5 oz
+S|Deli Sandwich Style Potato Chips|w:$2.99/7 oz
+S|Ode to the Classic Potato Chip|w:$3.29/10 oz
+S|Italian Aperitivo Medley Snack Mix|w:$2.69/8 oz
+S|Mini Pretzel Twists|w:$2.99/12 oz
+S|Synergistically Seasoned Popcorn|w:$2.49/5.5 oz
+S|Sweet & Spicy Rice Cracker Mix|w:$2.69/8 oz
+V|Ginger Lemon Herbal Tea|w:$2.99/20 bags
+V|Vietnam Small Lot Coffee|w:$11.99/12 oz
+V|Ethiopia Guji Coffee|w:$10.99/12 oz
+V|Organic Colombia Anei Fair Trade Coffee|w:$10.99/13 oz
+V|GT's Alive Raspberry Lychee|w:$3.49/16 fl oz
+V|Apple Prebiotic Soda|w:$1.99/12 fl oz
+V|London Fog Tea Drink Concentrate|w:$2.99/16 fl oz
+P|Pumpkin Oat Bites|w:$3.99/7.8 oz
+P|Vanilla O's|w:$3.49/13 oz
+P|Tiny Fruity Cuties Cereal|w:$2.99/12 oz
+P|Crispy Rice Bars|w:$2.99/6.2 oz
+P|Salted Almond Honey Granola|w:$3.99/12 oz
+P|Unsweetened Instant Oatmeal|w:$3.79/11.3 oz
+P|Raspberry Oat Bites|w:$3.99/7.8 oz
+P|PB&J Oat Bites|w:$3.99/7.8 oz
+P|Homestyle Cherry Pistachio Pecan Granola|w:$4.99/12 oz
+P|Pecan Pumpkin Oatmeal|w:$3.79/12.6 oz
+P|Frosted Flakes Cereal|w:$2.79/15 oz
+P|Organic Corn Flakes Cereal|w:$2.99/12 oz
+P|Very Berry Granola|w:$3.99/12 oz
+S|California Walnut Baking Pieces|w:$6.49/lb
+S|Pecan Pieces Dry Toasted Unsalted|w:$5.49/8 oz
+S|Mango & Passion Fruit Squares|w:$2.29/5.5 oz
+S|Pistachio Nutmeats Unroasted & Unsalted|w:$7.99/8 oz
+S|50% Less Sodium Roasted & Salted Whole Cashews|w:$8.99/lb
+S|Garlic Butter Nut Mix|w:$6.99/10 oz
+S|Freeze Dried Apricots|w:$4.99/1.4 oz
+S|Taco Seasoned Beef Stick|w:$1.99/1.15 oz
+S|Barebells Protein Bar Brownie Batter|w:$2.49/1.94 oz
+S|Barebells Creamy Crisp Protein Bar|w:$2.49/1.94 oz
+S|Barebells Coco Caramel Almond Protein Bar|w:$2.49/1.94 oz
+S|Chocolate Chip Cookie Dough Perfect Mini Bars|w:$7.49/7.6 oz
+S|This Pumpkin Walks Into A Bar Cereal Bars|w:$2.49/7.8 oz
+S|Organic Apple Strawberry Fruit Sauce Crushers|w:$2.99/12.7 oz
+P|Granola Butter|w:$5.49/12 oz
+P|3 Spreads for Cheeses & Toast|w:$8.99/13.75 oz
+P|Mixed Berry & Lemon Curd|w:$3.99/10.5 oz
+P|Apple Pie Spread|w:$3.99/10 oz
+P|Organic Guava Fruit Spread|w:$3.49/10.5 oz
+P|Creamy Unsalted Peanut Butter|w:$2.49/16 oz
+P|Crunchy Salted Peanut Butter|w:$2.49/16 oz
+P|Sri Lankan Organic Mango Chutney|w:$3.29/8.5 oz
+P|Raw Creamy Almond Butter No Salt|w:$6.99/16 oz
+P|Crunchy Salted Almond Butter|w:$6.49/16 oz
+M|Organic Silken Tofu|w:$2.49/16 oz
+M|Organic Tofu|w:$2.49/19 oz
+M|High Protein Organic Tofu|w:$2.99/16 oz
+M|Organic Firm Tofu|w:$1.99/14 oz
+M|Organic Baked Tofu Teriyaki Flavor|w:$3.99/7 oz
+M|Organic 3 Grain Tempeh|w:$2.49/8 oz
+M|Soy Chorizo|w:$2.99/12 oz
+P|Organic Fall Leaf Shaped Italian Pasta|w:$2.49/16 oz
+P|Organic Under the Sea Shaped Italian Pasta|w:$2.49/16 oz
+P|10 Minute Farro|w:$2.19/8.8 oz
+P|Spicy Squiggly Knife Cut Noodles|w:$5.49/15.9 oz
+P|Hot Honey Mustard|w:$1.99/9 oz
+P|Crunchy Sesame Sunflower Seeds Pepitas Salsa Macha|w:$1.99/6 oz
+P|Spicy Dynamite Sauce|w:$1.99/9.88 oz
+P|Yangnyeom Sauce|w:$3.99/15.5 oz
+P|Sweet Chili Sauce|w:$1.79/10.1 fl oz
+P|Thai Sweet Ginger Sauce|w:$2.49/10.1 fl oz
+P|Organic Mayonnaise|w:$3.99/16 fl oz
+P|Dill Pickle Mustard|w:$1.99/9 oz
+P|Crunchy Chili Onion|w:$4.49/6 oz
+P|Whole Grain Dijon Mustard|w:$2.29/12.3 oz
+P|Dijon Mustard|w:$2.29/13 oz
+P|Organic Ketchup|w:$2.49/24 oz
+P|Organic Yellow Mustard|w:$1.79/9 oz
+P|Magnifisauce!|w:$3.49/9.5 oz
+P|Pumpkin & Spice Caramel Sauce|w:$3.99/10 oz
+P|Bourbon Vanilla Bean Syrup|w:$4.49/8.45 fl oz
+P|Hard Top Chocolate Shell Topping|w:$3.29/6.17 oz
+P|Organic Maple Butter|w:$5.49/7 oz
+P|Pure Grade A Maple Syrup|w:$4.99/8 fl oz
+P|Organic Vermont Maple Syrup|w:$4.99/8 fl oz
+P|Organic Midnight Moo Chocolate Syrup|w:$3.99/15.8 oz
+P|Spicy Honey Sauce|w:$4.99/12 oz
+P|Multi-Floral & Clover Honey|w:$3.99/12 oz
+P|Fleur de Sel Caramel Sauce|w:$3.99/10 oz
+P|Lemon Pepper Seasoning Blend|w:$2.49/2.5 oz
+P|Vanilla Sugar|w:$3.99/3.5 oz
+P|Sea Salt Fine Crystals|w:$1.99/26.5 oz
+P|Organic Ground Turmeric|w:$1.99/2 oz
+P|Crunchy Chili Onion Sprinkle|w:$2.49/2.64 oz
+P|Black Peppercorns with Grinder|w:$2.49/1.8 oz
+P|Aglio Olio Seasoning Blend|w:$2.49/1.7 oz
+P|Organic Ground Black Pepper|w:$2.29/2 oz
+P|Organic Ground Cinnamon|w:$1.99/1.5 oz
+P|Cinnamon Sticks|w:$2.99/1 oz
+P|Pumpkin Pie Spice|w:$2.99/1.8 oz
+P|Salmon Rub Seasoning Blend|w:$2.69/2.6 oz
+P|Portuguese Flor de Sal|w:$4.99/5.11 oz
+P|Main Squeeze Extra Virgin Olive Oil|w:$10.99/25.4 fl oz
+P|Organic Extra Virgin Spanish Olive Oil|w:$8.49/16.9 fl oz
+P|Premium Extra Virgin Olive Oil Cold Pressed|w:$12.49/33.8 fl oz
+P|Organic Virgin Coconut Oil|w:$4.99/16 fl oz
+P|Avocado Oil|w:$7.99/16.9 fl oz
+P|Rice Vinegar|w:$2.79/16.9 fl oz
+P|Organic Raw Apple Cider Vinegar|w:$2.99/16.9 fl oz
+P|Extra Virgin Olive Oil, Liter|w:$10.99/33.8 fl oz
+P|Organic Toasted Sesame Oil|w:$3.49/5 fl oz
+P|Trader Giotto's Imported Olive Oil|w:$9.99/33.8 fl oz
+P|Organic Red Wine Vinegar|w:$2.29/8.45 fl oz
+P|Organic Balsamic Vinegar|w:$5.99/8.5 fl oz
+P|Organic Low Sodium Chicken Broth|w:$2.19/32 fl oz
+P|Organic Low Sodium Vegetable Broth|w:$2.19/32 fl oz
+P|Organic Hearty Vegetable Broth|w:$2.19/32 fl oz
+P|Organic Free Range Chicken Broth|w:$2.19/32 fl oz
+P|Turkey Chili with Beans|w:$2.99/15 oz
+P|Tikka Masala Curry Sauce|w:$2.49/8.8 oz
+P|Chicken Noodle Soup|w:$2.99/19 oz
+P|Italian-Style Wedding Soup|w:$4.99/22 oz
+P|Organic Vegetarian Chili|w:$2.49/14.67 oz
+P|Organic Tomato & Roasted Red Pepper Soup|w:$3.49/32 fl oz
+P|Organic Lentil Vegetable Soup|w:$2.49/15 oz
+P|Pumpkin Bisque|w:$5.49/25 oz
+P|Caro Sugo Datterino Cherry Tomatoes & Roasted Garlic Pasta Sauce|w:$5.49/24.3 oz
+P|Buffalo Sauce|w:$3.49/8.5 oz
+P|Spicy Queso Dip|w:$3.99/10 oz
+P|Creamy Dreamy Hummus To Go|w:$3.49/12 oz
+P|Organic Vodka Sauce|w:$3.49/25 oz
+P|Alfredo Pasta Sauce|w:$3.49/16 oz
+P|Italian Tomato Pasta Sauce Trio|w:$9.99/30.69 oz
+P|Chunky Blue Cheese Dressing & Dip|w:$4.99/12 oz
+P|Spicy & Sweet Creamy Pepper Dip|w:$3.99/9.5 oz
+P|Bird's Eye Chile Hot Sauce|w:$2.99/4.22 fl oz
+P|Salsa Taquera|w:$2.49/12 oz
+P|Mango Pineapple Pico de Gallo Salsa|w:$3.99/12 oz
+P|Cowboy Caviar Salsa|w:$3.49/13 oz
+P|Italian Bomba Hot Pepper Sauce|w:$3.79/6.7 oz
+P|Guacasalsa|w:$3.99/10 oz
+P|Fall Harvest Salsa|w:$3.49/12 oz
+P|Sriracha Sauce|w:$3.99/18.25 oz
+P|Chunky Garlic & Jalapeño Hot Sauce|w:$3.99/10 fl oz
+P|Pico de Gallo Salsa Mild|w:$2.99/12 oz
+P|Habanero Hot Sauce|w:$3.69/4.4 fl oz
+P|Corn and Chile Tomato-less Salsa|w:$3.49/13.75 oz
+P|Homestyle Salsa Especial Mild|w:$2.99/12 oz
+P|Jalapeño Sauce|w:$3.49/10 oz
+P|Salsa Autentica|w:$2.29/12 oz
+P|Organic Ranch Dressing|w:$2.99/16 fl oz
+P|Cilantro Salad Dressing|w:$3.99/12 fl oz
+P|Balsamic Vinaigrette|w:$2.99/12 fl oz
+P|Cranberry Ginger Chutney|w:$2.99/8 oz
+P|Thai Style Peanut Dressing|w:$3.99/12 fl oz
+P|Hoisin Sauce|w:$1.99/10.23 oz
+P|Soy Sauce Reduced Sodium|w:$3.99/17.6 fl oz
+P|Organic 100% Sicilian Lemon Juice|w:$3.29/8.45 fl oz
+P|Trader Giotto's Glaze|w:$3.29/8.45 fl oz
+P|Thai Peanut Satay Sauce|w:$2.29/8.1 oz
+P|Soyaki|w:$3.99/21 oz
+P|Traditional Tunisian Harissa|w:$2.99/6.7 oz`;
+const AD=AD_RAW.trim().split("\n").map(l=>{const[c,n,d,s,x]=l.split("|");const long=d[0]==="~",k=long?d.slice(1):d,save=s?+s:null,f=v=>"$"+(+v).toFixed(2);let label,pct=null,price=null,reg=null;
+  if(k==="bogo"){label="Buy 1 get 1 free";pct=.5}else if(k==="b2g1"){label="Buy 2 get 1 free";pct=1/3}else if(k==="b2g2"){label="Buy 2 get 2 free";pct=.5}else if(k==="b2g3"){label="Buy 2 get 3 free";pct=.6}
+  else if(k[0]==="p"){price=+k.slice(1);label=f(price);if(save)pct=save/(price+save)}
+  else if("kqa".includes(k[0])){price=+k.slice(1);label=f(price);reg=+s;pct=(reg-price)/reg}
+  else if(k[0]==="m"){const[q,t]=k.slice(1).split("/");label=q+" for "+f(t);if(save)pct=save/(+t+save)}
+  else if(k[0]==="o"){pct=+k.slice(1)/100;label=k.slice(1)+"% off"}
+  else if(k[0]==="d"){label=f(k.slice(1))+" off with manufacturer digital coupon"}
+  else label=k.slice(2);
+  return{ad:1,st:k[0]==="k"?0:"ayz".includes(k[0])?2:k[0]==="w"?3:1,n,c:CATMAP[c],x:x||"",label,pct,save:"kqa".includes(k[0])?+(reg-price).toFixed(2):save,reg,price,v:k[0]==="k"?"ends Mon 10/26":k[0]==="w"?"everyday price":"qu".includes(k[0])?"ends Mon (per GroceryChop)":"az".includes(k[0])?"10/14 - 11/10":long?"10/21 - 11/3":"10/21 - 10/27"}});
+// Store comparisons built from the real prices above. Line: name|category|unit|k/p/a/t=price/quantity~product note (k Kroger, p Publix, a Aldi, t Trader Joe's)
+const CMP_RAW=`Frozen shrimp|F|lb|p=14.99/1~Publix Florida Pink Shrimp, 16-oz (large, wild, $13.99 with digital coupon);a=11.99/1~Specially Selected Black Tiger Shrimp, 16-oz
+Potatoes|R|lb|a=2.49/1.5~Bite-Size Yellow Potatoes, 24-oz bag;t=4.99/5~Gold Potatoes, 5-lb bag
+Extra virgin olive oil|P|fl oz|p=9.99/16.9~Carapelli Olive Oil, 16.9-oz;t=8.49/16.9~Organic Extra Virgin Spanish Olive Oil, 16.9 fl oz
+Mayonnaise|P|oz|p=7.99/48~Duke's Mayonnaise, 48-oz;t=3.99/16~Organic Mayonnaise, 16 fl oz
+Jarred tomato pasta sauce|P|oz|p=6.99/32~Rao's Homemade Sauce, 32-oz jar;t=5.49/24.3~Caro Sugo Cherry Tomatoes & Roasted Garlic Pasta Sauce, 24.3-oz
+Bacon bits|M|oz|p=2.50/3~Publix Bacon Bits, 3-oz pouch (2 for $5.00);t=3.29/3~Uncured Bacon Bits, 3-oz
+Canned or pouched tuna|P|oz|p=4.50/16~Chicken of the Sea Albacore Tuna, 4-pk of 4-oz cans (2 for $9.00);t=2.49/4.5~Solid Light Yellowfin Tuna in Olive Oil, 4.5-oz
+Coffee|V|oz|p=6.99/10~Don Francisco's Coffee, 10-oz can;t=10.99/13~Organic Colombia Anei Fair Trade Coffee, 13-oz
+Pretzels|S|oz|a=2.19/16~Clancy's Pretzels, 16-oz;t=2.99/12~Mini Pretzel Twists, 12-oz
+Salsa|P|oz|a=2.59/16~Simply Nature Organic Assorted Salsa, 16-oz;t=2.49/12~Salsa Taquera, 12-oz
+Tortilla chips|S|oz|a=2.49/8.25~Simply Nature Tortilla Chips, 8.25-oz;t=2.99/9~Nacho Cheese Flavored Rolled Corn Tortilla Chips, 9-oz
+Breaded chicken|F|oz|a=6.89/48~Kirkwood Family Size Chicken Nuggets, 48-oz;t=8.99/28~Breaded Chicken Tenderloin Breasts, 28-oz
+Chocolate chip morsels|P|each|k=4.99/1~Nestle Toll House Milk Chocolate Morsels (size not listed);p=5.00/1~Nestlé Toll House Morsels, 9 to 12-oz (2 for $10.00)
+Salmon fillets|M|lb|a=9.99/1~Fresh Skinless Atlantic Salmon, per lb;t=16.99/1~Wild Alaskan Sockeye Salmon Fillets, per lb
+Frozen scallops|M|oz|a=5.99/16~Fremont Fish Market Bay Scallops, 16-oz;t=9.99/16~Patagonian Scallops, 16-oz
+Smoked salmon|M|oz|a=11.49/16~Lightly Smoked Salmon, priced per lb;t=5.49/4~Norwegian Smoked Salmon, 4-oz
+Whole cashews|S|oz|p=8.29/14~Emerald Whole Cashews, 14-oz;t=8.99/16~50% Less Sodium Roasted & Salted Whole Cashews, 1 lb
+Crackers|S|oz|p=3.50/13.7~Publix Snack Crackers, 13.7-oz (2 for $7.00);a=3.79/21~Savoritz Family Size Cheese Crackers, 21-oz
+Spaghetti pasta|P|oz|k=1.33/16~Kroger Spaghetti, 16-oz (everyday low price);t=0.99/16~Spaghetti, 16-oz`;
+const CMP=CMP_RAW.trim().split("\n").map(l=>{const[n,c,u,e]=l.split("|"),ent=[];e.split(";").forEach(x=>{const m=/^\s*([kpat])=([\d.]+)\/([\d.]+)~(.*)$/.exec(x);if(m)ent["kpat".indexOf(m[1])]={price:+m[2],qty:+m[3],note:m[4],unit:+m[2]/+m[3]}});return{n,c:CATMAP[c],u,ent}});
+function cmpEl(g){return[0,1,2,3].filter(i=>g.ent[i]&&use(i))}
+function cmpRow(g){const el=cmpEl(g),us=el.map(i=>g.ent[i].unit),lo=Math.min(...us),hi=Math.max(...us),bi=el.find(i=>g.ent[i].unit===lo),pct=Math.round((hi-lo)/hi*100),u=x=>"$"+(x<1?x.toFixed(3):x.toFixed(2))+"/"+g.u;
+  return `<div class="item"><div><div class="name">${g.n}</div><div class="size">Compared per ${g.u}</div><span class="tag" style="color:var(--best);background:var(--bestbg)">Cheapest: ${STORES[bi].name} ${u(lo)}</span> <span class="tag">Up to ${pct}% less per ${g.u}</span></div><div class="prices">${STORES.map((s,i)=>{const e=g.ent[i];
+  if(loc&&!inRange(i))return `<div class="p na dim"><div class="sn ${s.c}">${s.name}</div><div class="v">None within ${radius} mi</div></div>`;
+  if(!e)return `<div class="p na"><div class="sn ${s.c}">${s.name}</div><div class="v">Not in our data</div></div>`;
+  return `<div class="p${i===bi?" best":""}${use(i)?"":" dim"}"><div class="sn ${s.c}">${s.name}</div><div class="v">${money(e.price)}</div><div class="was" style="text-decoration:none">${e.note}</div><div class="off" style="color:var(--muted)">${u(e.unit)}</div></div>`}).join("")}</div></div>`}
+function renderCmp(){
+  let g=CMP.filter(g=>(cat==="All"||g.c===cat)&&(!q||(g.n+" "+g.c+" "+g.ent.filter(Boolean).map(e=>e.note).join(" ")).toLowerCase().includes(q))).filter(g=>cmpEl(g).length>1);
+  const us=g=>cmpEl(g).map(i=>g.ent[i].unit),spread=g=>1-Math.min(...us(g))/Math.max(...us(g));
+  g.sort(sort==="low"?(a,b)=>Math.min(...us(a))-Math.min(...us(b)):sort==="name"?(a,b)=>a.n.localeCompare(b.n):(a,b)=>spread(b)-spread(a));
+  $("picks").innerHTML="";
+  $("count").textContent=g.length+(g.length===1?" comparison":" comparisons")+" with real prices at 2 or more stores. These are closest matches, not always identical items, and sale prices are this week’s ads. “Not in our data” means we haven’t found a price there, not that the store doesn’t sell something similar.";
+  $("list").innerHTML=g.length?g.map(cmpRow).join(""):`<div class="empty">No comparisons match. Try turning on more stores or clearing the search.</div>`}
+function adRow(d){return `<div class="item"><div><div class="name">${d.n}</div><div class="size">${d.x}</div>${d.pct!=null?`<span class="tag">${d.reg?"":"Effective "}${Math.round(d.pct*100)}% off at ${STORES[d.st].name}</span>`:""}</div><div class="prices" style="grid-template-columns:1fr"><div class="p ${STORES[d.st].c}${d.pct!=null?" best":""}" style="text-align:left;padding:10px 14px"><div class="sn">${STORES[d.st].name} · ${d.reg||d.v[0]==="e"?"":"valid "}${d.v}</div><div class="v">${d.label}</div>${d.reg?`<div class="was">${money(d.reg)}</div>`:d.save?`<div class="was" style="text-decoration:none">Save up to ${money(d.save)}</div>`:""}</div></div></div>`}
+const CATS=["All",...new Set(AD.map(a=>a.c))];
+let cat="All",active=new Set([0,1,2,3]),q="",sort="pct",mode="deals";
+const $=id=>document.getElementById(id);
+// ZIP centers [lat, lng, town] (approximate) and real store locations from Google Maps: [chain, name, address, lat, lng]
+const ZIPS={"30601":[33.95,-83.37,"Athens"],"30605":[33.91,-83.35,"Athens"],"30606":[33.91,-83.43,"Athens"],"30677":[33.87,-83.41,"Watkinsville"],"30622":[33.94,-83.53,"Bogart"],"30666":[33.97,-83.60,"Statham"],"30680":[33.99,-83.72,"Winder"],"30655":[33.79,-83.71,"Monroe"],"30549":[34.12,-83.57,"Jefferson"],"30548":[34.09,-83.76,"Hoschton"],"30501":[34.29,-83.82,"Gainesville"],"30504":[34.23,-83.87,"Gainesville"],"30542":[34.19,-83.92,"Flowery Branch"],"30518":[34.10,-83.99,"Buford"],"30519":[34.07,-83.98,"Buford"]};
+const SL=[[0,"Kroger Marketplace","700 US-29, Athens, GA 30601",33.9961807,-83.3332235],[0,"Kroger","191 Alps Rd, Athens, GA 30606",33.9473116,-83.407755],[0,"Kroger Marketplace","2040 S Barnett Shoals Rd, Athens, GA 30605",33.9230249,-83.342997],[0,"Kroger","1720 Epps Bridge Pkwy, Athens, GA 30606",33.9131465,-83.4464058],[0,"Kroger Marketplace","175 Peachtree Exchange Blvd, Hoschton, GA 30548",34.0907145,-83.7570385],[0,"Kroger","4025 Winder Hwy, Flowery Branch, GA 30542",34.1963716,-83.8571083],[0,"Kroger","1685 Old Pendergrass Rd, Jefferson, GA 30549",34.1219171,-83.6070219],
+[1,"Publix at Athens Pointe","3620 Atlanta Hwy, Athens, GA 30606",33.9406995,-83.4555185],[1,"Publix at Oak Grove","5345 Jefferson Rd, Athens, GA 30606",33.9917735,-83.4376761],[1,"Publix at Georgetown Square","1860 S Barnett Shoals Rd, Athens, GA 30605",33.9245826,-83.3420675],[1,"Publix at Butler’s Crossing","2061 Experiment Station Rd, Watkinsville, GA 30677",33.8711243,-83.4412305],[1,"Publix at Gateway Crossing","51 Old Farm Rd, Jefferson, GA 30549",34.1254634,-83.604864],[1,"Publix at Winder Corners","17 Monroe Hwy, Winder, GA 30680",33.9792898,-83.7141324],[1,"Publix at Winder Hill","401 Gainesville Hwy, Winder, GA 30680",34.0098807,-83.7064804],[1,"Publix at Golden Park Village","4840 Golden Pkwy, Buford, GA 30518",34.1419943,-83.950726],
+[2,"ALDI","1055 Gaines School Rd, Athens, GA 30605",33.926596,-83.336871],[2,"ALDI","3400 Atlanta Hwy, Athens, GA 30606",33.940166,-83.452539],[2,"ALDI","160 W May St, Winder, GA 30680",33.994184,-83.733039],[2,"ALDI","1705 Mall of Georgia Blvd, Buford, GA 30519",34.06024,-83.99364],[2,"ALDI","7507 Spout Springs Rd, Buford, GA 30519",34.1052,-83.871886],[2,"ALDI","834 Dawsonville Hwy, Gainesville, GA 30501",34.298185,-83.854614],[2,"ALDI","3640 Mundy Mill Rd, Gainesville, GA 30504",34.229391,-83.86673],
+[3,"Trader Joe’s","1850 Epps Bridge Pkwy, Athens, GA 30606",33.9155902,-83.4430635],
+[0,"Kroger","3871 Peachtree Rd NE, Brookhaven, GA 30319",33.8564,-84.3448],[0,"Kroger","4920 Roswell Rd NE, Atlanta, GA 30342",33.8898,-84.3834],[0,"Kroger","1799 Briarcliff Rd NE, Atlanta, GA 30306",33.8042,-84.3361],[0,"Kroger","2205 Lavista Rd NE, Atlanta, GA 30329",33.8156,-84.3138],[0,"Kroger","725 Ponce De Leon Ave NE, Atlanta, GA 30306",33.7717,-84.3634],[0,"Kroger","1700 Monroe Dr NE, Atlanta, GA 30324",33.8005,-84.3730],[0,"Kroger","900 Marietta Hwy, Roswell, GA 30075",34.0040,-84.3895],[0,"Kroger","1227 Rockbridge Rd, Stone Mountain, GA 30087",33.8412,-84.1331],[0,"Kroger","1232 S Hairston Rd, Stone Mountain, GA 30088",33.7594,-84.1951],[0,"Kroger Marketplace","1006 Martins Chapel Rd, Lawrenceville, GA 30045",33.9463,-83.9257],[0,"Kroger","4357 Lawrenceville Hwy, Tucker, GA 30084",33.8551,-84.2071],[0,"Kroger","2875 N Decatur Rd, Decatur, GA 30033",33.7918,-84.2734],[0,"Kroger","2100 Riverside Pkwy, Lawrenceville, GA 30043",33.9666,-84.0335],
+[0,"Kroger Marketplace","318 Mall Blvd Suite 100, Savannah, GA 31406",32.0063,-81.1129],[0,"Kroger","311 E Gwinnett St, Savannah, GA 31401",32.0659,-81.0926],[0,"Kroger","5720 Ogeechee Rd, Savannah, GA 31405",32.0272,-81.2259],[0,"Kroger","1900 E Victory Dr Ste 12, Savannah, GA 31404",32.0455,-81.0681],[0,"Kroger Marketplace","3942 Harper-Franklin Ave, Augusta, GA 30909",33.4466,-82.1192],[0,"Kroger","2801 Washington Rd, Augusta, GA 30909",33.5118,-82.0294],[0,"Kroger","220 Tom Hill Sr Blvd, Macon, GA 31210",32.8988,-83.6914],[0,"Kroger","4628 Presidential Pkwy, Macon, GA 31206",32.8191,-83.7110],[0,"Kroger","4650 Forsyth Rd, Macon, GA 31210",32.8732,-83.7098],
+[1,"Publix at Buckhead Landing","3330 Piedmont Rd NE Ste 16, Atlanta, GA 30305",33.8455,-84.3743],[1,"Publix at Lenox Marketplace","3535 Peachtree Rd NE, Atlanta, GA 30326",33.8510,-84.3598],[1,"Publix at The Peach","2900 Peachtree Rd NW, Atlanta, GA 30305",33.8351,-84.3838],[1,"Publix at Peachtree Battle","2365 Peachtree Rd NE, Atlanta, GA 30305",33.8210,-84.3867],[1,"Publix at Chastain Square","4279 Roswell Rd NE Ste 300, Atlanta, GA 30342",33.8711,-84.3791],[1,"Publix at Jonquil Plaza","2955 Atlanta Rd SE, Smyrna, GA 30080",33.8816,-84.5120],[1,"Publix at Highland Station","4480 S Cobb Dr SE, Smyrna, GA 30080",33.8434,-84.5044],[1,"Publix at Moores Mill","2275 Marietta Blvd NW, Atlanta, GA 30318",33.8195,-84.4507],[1,"Publix at Sandy Plains Exchange","1860 Sandy Plains Rd, Marietta, GA 30066",33.9936,-84.5094],[1,"Publix at Sope Creek Crossing","2900 Delk Rd SE #1150, Marietta, GA 30067",33.9229,-84.4668],[1,"Publix at Paces Ferry Center","2451 Cumberland Pkwy SE, Atlanta, GA 30339",33.8630,-84.4784],[1,"Publix at Old Peachtree","2380 Buford Dr Ste 201, Lawrenceville, GA 30043",34.0363,-83.9902],[1,"Publix at Huntcrest","1030 Old Peachtree Rd NW, Lawrenceville, GA 30043",33.9984,-84.0681],[1,"Publix at Merton Walk","911 Duluth Hwy, Lawrenceville, GA 30043",33.9695,-84.0237],[1,"Publix at Peachtree East","130 Peachtree East Ct Ste 4, Peachtree City, GA 30269",33.4236,-84.5569],[1,"Publix at National Plaza","2816 Washington Rd, Augusta, GA 30909",33.5079,-82.0311],[1,"Publix at Bass Plantation","5451 Bowman Rd, Macon, GA 31210",32.9244,-83.7356],[1,"Publix at Tobesofkee Crossing","5581 Thomaston Rd, Macon, GA 31220",32.8359,-83.7439],[1,"Publix at Old Town Marketplace","8132 Veterans Pkwy Bldg 3, Columbus, GA 31909",32.5666,-84.9332],[1,"Publix at Cross Country Plaza","3201 Macon Rd Ste 201, Columbus, GA 31906",32.4827,-84.9444],[1,"Publix at Midland Commons","6901 Ray Wright Wy, Columbus, GA 31909",32.5462,-84.8745],[1,"Publix at Bradley Park Square","1639 Bradley Park Dr Ste 600, Columbus, GA 31904",32.5343,-84.9668],
+[2,"ALDI","3221 Peachtree Rd NE #101, Atlanta, GA 30305",33.8415,-84.3730],[2,"ALDI","3963 Buford Hwy NE, Atlanta, GA 30345",33.8582,-84.3107],[2,"ALDI","1461 Moreland Ave SE, Atlanta, GA 30316",33.7139,-84.3500],[2,"ALDI","676 Decatur Village Wy, Decatur, GA 30033",33.7961,-84.2852],[2,"ALDI","2589 Spring Rd SE, Smyrna, GA 30080",33.8838,-84.4772],[2,"ALDI","3480 Memorial Dr, Decatur, GA 30032",33.7538,-84.2707],[2,"ALDI","1651 E Victory Dr, Savannah, GA 31404",32.0446,-81.0740],[2,"ALDI","14070 Abercorn St, Savannah, GA 31419",31.9821,-81.1768],[2,"ALDI","3121 Peach Orchard Rd, Augusta, GA 30906",33.4113,-82.0274],[2,"ALDI","227 Bobby Jones Expy, Augusta, GA 30907",33.5064,-82.0924],[2,"ALDI","1360 Knox Ave, North Augusta, SC 29841",33.5083,-81.9592],[2,"ALDI","4501 Log Cabin Dr, Macon, GA 31204",32.8213,-83.7106],[2,"ALDI","6301 Veterans Pkwy Ste 500, Columbus, GA 31909",32.5358,-84.9564],[2,"ALDI","3200 Macon Rd, Columbus, GA 31906",32.4799,-84.9411],
+[3,"Trader Joe’s","3183 Peachtree Rd, Atlanta, GA 30305",33.8410,-84.3750],[3,"Trader Joe’s","931 Monroe Dr NE, Atlanta, GA 30308",33.7797,-84.3676],
+[3,"Trader Joe’s","1820 E Arbors Dr, Charlotte, NC 28262",35.3368,-80.7546],[3,"Trader Joe’s","1133 Metropolitan Ave, Charlotte, NC 28204",35.2120,-80.8352],[3,"Trader Joe’s","6418 Rea Rd, Charlotte, NC 28277",35.0789,-80.8179],[2,"ALDI","9609 N Tryon St, Charlotte, NC 28262",35.3172,-80.7390],[2,"ALDI","2526 Freedom Dr, Charlotte, NC 28208",35.2371,-80.8804],[1,"Publix at Shops at Southline","2222 South Blvd, Charlotte, NC 28203",35.2064,-80.8623],
+[3,"Trader Joe’s","3909 Hillsboro Pike, Nashville, TN 37215",36.1051,-86.8156],[3,"Trader Joe’s","90 White Bridge Rd, Nashville, TN 37205",36.1307,-86.8522],[3,"Trader Joe’s","545 Cool Springs Blvd, Franklin, TN 37067",35.9493,-86.8218],[2,"ALDI","405 American Rd, Nashville, TN 37209",36.1452,-86.8739],[0,"Kroger","711 Gallatin Ave, Nashville, TN 37206",36.1843,-86.7470],[0,"Kroger","3410 Gallatin Pike, Nashville, TN 37216",36.2102,-86.7315],
+[2,"ALDI","213 N Dale Mabry Hwy, Tampa, FL 33609",27.9464,-82.5052],[3,"Trader Joe’s","3808 W Swann Ave, Tampa, FL 33609",27.9373,-82.5063],[1,"Publix at Dale Mabry Shopping Center","1313 S Dale Mabry Hwy, Tampa, FL 33629",27.9308,-82.5073],[2,"ALDI","2100 W Swann Ave, Tampa, FL 33606",27.9361,-82.4815],[1,"Publix at West River","1700 N Blvd, Tampa, FL 33607",27.9572,-82.4686],[1,"Publix at Gandy Shopping Center","3617 W Gandy Blvd, Tampa, FL 33611",27.8949,-82.5031],
+[3,"Trader Joe’s","8323 Sand Lake Rd, Orlando, FL 32819",28.4503,-81.4966],[1,"Publix at The Marketplace at Dr. Phillips","7524 Dr Phillips Blvd, Orlando, FL 32819",28.4536,-81.4901],[1,"Publix at Plaza Venezia","7640 W Sand Lake Rd, Orlando, FL 32819",28.4488,-81.4865],[2,"ALDI","1403 S Hiawassee Rd, Orlando, FL 32835",28.5254,-81.4701],[2,"ALDI","1768 John Young Pkwy, Orlando, FL 32808",28.5693,-81.4164],[1,"Publix at The Market at Southside","2873 S Orange Ave, Orlando, FL 32806",28.5102,-81.3731]];
+// ZIP centers: add approximate centers for a few more cities, then derive a center for every ZIP that has a store above
+Object.assign(ZIPS,{"30303":[33.75,-84.39,""],"30309":[33.79,-84.39,""],"30030":[33.77,-84.30,""],"30060":[33.95,-84.55,""],"30144":[34.02,-84.62,""],"30328":[33.93,-84.38,""],"30004":[34.08,-84.29,""],"31201":[32.84,-83.63,""],"30901":[33.47,-81.97,""],"31901":[32.46,-84.99,""],"31401":[32.07,-81.09,""],"28202":[35.23,-80.84,""],"37201":[36.16,-86.78,""],"33602":[27.95,-82.46,""],"32801":[28.54,-81.38,""]});
+(function(){const acc={};SL.forEach(x=>{const m=/ (\d{5})$/.exec(x[2]);if(!m)return;const a=acc[m[1]]||(acc[m[1]]=[0,0,0]);a[0]+=x[3];a[1]+=x[4];a[2]++});Object.keys(acc).forEach(z=>{if(!ZIPS[z])ZIPS[z]=[acc[z][0]/acc[z][2],acc[z][1]/acc[z][2],""]})})();
+let loc=null,near=[],radius=20;
+const miles=(a,b,c,d)=>{const r=Math.PI/180,x=Math.sin((c-a)*r/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin((d-b)*r/2)**2;return 3959*2*Math.asin(Math.sqrt(x))};
+const inRange=i=>!loc||(near[i]&&near[i].mi<=radius);
+const use=i=>active.has(i)&&inRange(i);
+function setLoc(z){loc=ZIPS[z]||null;near=[];if(!loc)return;STORES.forEach(s=>{let b=null;SL.forEach(x=>{if(x[0]!==s.id)return;const mi=miles(loc[0],loc[1],x[3],x[4]);if(!b||mi<b.mi)b={mi,name:x[1],addr:x[2]}});near[s.id]=b})}
+function nearby(){const el=$("nearby");if(!loc){el.innerHTML="";return}
+  const r=SL.map(x=>({x,mi:miles(loc[0],loc[1],x[3],x[4])})).filter(o=>o.mi<=radius&&active.has(o.x[0])).sort((a,b)=>a.mi-b.mi);
+  el.innerHTML=r.length?`<details><summary>${r.length} store locations within ${radius} miles</summary><ul style="list-style:none;padding:0;margin:8px 0 14px;font-size:.88rem">`+r.slice(0,25).map(o=>`<li style="padding:3px 0"><b class="${STORES[o.x[0]].c}">${o.x[1]}</b> · ${o.x[2]} · ${o.mi.toFixed(1)} mi</li>`).join("")+`</ul><div style="color:var(--muted);font-size:.8rem">Locations from Google Maps. Distances are straight-line.</div></details>`:""}
+function labelStores(){[...$("stores").children].forEach(b=>{const id=+b.dataset.s,n=near[id];b.textContent=STORES[id].name+(loc?(n?` · ${Math.max(1,Math.round(n.mi))} mi`:" · none"):"");b.title=loc&&n?`Nearest: ${n.name}, ${n.addr}`:"";b.style.opacity=inRange(id)?1:.45})}
+function locMsg(){const m=$("locmsg"),z=$("zip").value.trim();
+  if(!z){m.textContent="Enter a ZIP code to see only stores within your travel distance.";return}
+  if(z.length<5){m.textContent="";return}
+  if(!loc){m.textContent="That ZIP isn’t covered yet. Try a ZIP in a covered area: Georgia (Athens, Atlanta, Savannah, Augusta, Macon, Columbus), Charlotte, Nashville, Tampa or Orlando.";return}
+  const c=STORES.filter(s=>inRange(s.id)).length;
+  m.textContent=c?`Showing ${c} of 4 stores within ${radius} miles of ${z}.`:`No stores within ${radius} miles of ${z}. Try a larger distance.`}
+$("zip").oninput=e=>{e.target.value=e.target.value.replace(/\D/g,"");setLoc(e.target.value.length===5?e.target.value:"");render()};
+$("radius").onchange=e=>{radius=+e.target.value;render()};
+const money=v=>"$"+v.toFixed(2);
+const eff=(d,i)=>d.p[i]==null?null:(d.s2[i]!=null?d.s2[i]:d.p[i]);
+$("cats").innerHTML=CATS.map(c=>`<button class="chip" data-c="${c}" aria-pressed="${c===cat}">${c}</button>`).join("");
+$("stores").innerHTML=STORES.map(s=>`<button class="chip store ${s.c}" data-s="${s.id}" aria-pressed="true">${s.name}</button>`).join("");
+$("cats").onclick=e=>{const b=e.target.closest("button");if(!b)return;cat=b.dataset.c;[...$("cats").children].forEach(x=>x.setAttribute("aria-pressed",x===b));render()};
+$("stores").onclick=e=>{const b=e.target.closest("button");if(!b)return;const id=+b.dataset.s;
+  if(active.has(id)){if(active.size===1)return;active.delete(id)}else active.add(id);b.setAttribute("aria-pressed",active.has(id));render()};
+$("mode").onclick=e=>{const b=e.target.closest("button");if(!b)return;mode=b.dataset.m;[...$("mode").children].forEach(x=>x.setAttribute("aria-pressed",x===b));render()};
+$("q").oninput=e=>{q=e.target.value.trim().toLowerCase();render()};
+$("sort").onchange=e=>{sort=e.target.value;render()};
+function info(d){let best=null,low=Infinity,lowS=-1;
+  d.p.forEach((reg,i)=>{if(reg==null||!use(i))return;const e=eff(d,i);if(e<low){low=e;lowS=i}
+    if(d.s2[i]!=null){const off=reg-d.s2[i],pct=off/reg;if(!best||pct>best.pct)best={i,off,pct,sale:d.s2[i],reg}}});
+  return{best,low,lowS}}
+function render(){
+  labelStores();locMsg();nearby();
+  if(mode==="cmp"){renderCmp();return}
+  let items=items0.filter(d=>(cat==="All"||d.c===cat)&&(!q||(d.n+" "+d.c).toLowerCase().includes(q))&&d.p.some((v,i)=>v!=null&&use(i)))
+    .map(d=>({d,i:info(d)}));
+  items=items.concat(AD.filter(a=>use(a.st)&&(cat==="All"||a.c===cat)&&(!q||(a.n+" "+a.c).toLowerCase().includes(q))).map(a=>({d:a,i:{best:a.pct!=null?{pct:a.pct,off:a.save||0,i:a.st}:null,low:a.price!=null?a.price:1e6,lowS:a.st}})));
+  if(mode==="deals")items=items.filter(x=>(x.d.ad&&x.d.st!==3)||x.i.best);
+  const key={pct:x=>-(x.i.best?x.i.best.pct:0),off:x=>-(x.i.best?x.i.best.off:0),low:x=>x.i.low,name:null}[sort];
+  items.sort(key?(a,b)=>key(a)-key(b)||a.d.n.localeCompare(b.d.n):(a,b)=>a.d.n.localeCompare(b.d.n));
+  const top=[...items].filter(x=>x.i.best).sort((a,b)=>b.i.best.pct-a.i.best.pct).slice(0,3);
+  $("picks").innerHTML=top.length?`<div class="hd">Top deals right now</div><div class="picks">`+top.map(({d,i})=>{const s=STORES[i.best.i];
+    return `<div class="pick ${s.c}"><div class="pct">${Math.round(i.best.pct*100)}% off</div><div class="pn">${d.n}</div><div class="pd">${d.ad?d.label+" at "+s.name+(d.reg?" (was "+money(d.reg)+")":""):money(i.best.sale)+" at "+s.name+" (was "+money(i.best.reg)+")"}</div></div>`}).join("")+`</div>`:"";
+  $("count").textContent=items.length+(items.length===1?" product":" products")+(mode==="deals"?" on sale":"");
+  $("list").innerHTML=items.length?items.map(({d,i})=>d.ad?adRow(d):`<div class="item"><div><div class="name">${d.n}</div><div class="size">${d.s}</div>${i.best?`<span class="tag">Biggest discount: ${Math.round(i.best.pct*100)}% off at ${STORES[i.best.i].name}</span>${i.lowS!==i.best.i?` <span class="tag" style="color:var(--best);background:var(--bestbg)">Lowest price: ${money(i.low)} at ${STORES[i.lowS].name}</span>`:""}`:""}</div>
+    <div class="prices">${STORES.map(s=>{const reg=d.p[s.id],sale=d.s2[s.id],on=use(s.id);
+      if(loc&&!inRange(s.id))return `<div class="p na dim"><div class="sn ${s.c}">${s.name}</div><div class="v">None within ${radius} mi</div></div>`;
+      if(reg==null)return `<div class="p na ${on?"":"dim"}"><div class="sn ${s.c}">${s.name}</div><div class="v">Not carried</div></div>`;
+      const isBest=on&&i.lowS===s.id;
+      return `<div class="p ${isBest?"best":""} ${on?"":"dim"}"><div class="sn ${s.c}">${s.name}</div><div class="v">${money(sale!=null?sale:reg)}</div>${sale!=null?`<div class="was">${money(reg)}</div><div class="off">${Math.round((reg-sale)/reg*100)}% off</div>`:`<div class="was" style="text-decoration:none">regular</div>`}</div>`}).join("")}</div></div>`).join("")
+    :`<div class="empty">${mode==="deals"?"No sales match your filters.":"No products match your search."}<br><button class="chip" id="reset">Clear search and filters</button></div>`;
+  const r=$("reset");if(r)r.onclick=()=>{q="";$("q").value="";cat="All";active=new Set([0,1,2,3]);[...$("cats").children].forEach(x=>x.setAttribute("aria-pressed",x.dataset.c==="All"));[...$("stores").children].forEach(x=>x.setAttribute("aria-pressed","true"));render()};
+}
+$("theme").onclick=()=>{const r=document.documentElement;const dark=r.dataset.theme?r.dataset.theme==="dark":matchMedia("(prefers-color-scheme:dark)").matches;r.dataset.theme=dark?"light":"dark"};
+render();
+</script>
+</body>
+</html>
